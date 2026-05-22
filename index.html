@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Double seam inspection log</title>
+    <title>Double seam inspection log - Full Version</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, sans-serif; background: #f4f7f6; padding: 10px; }
@@ -11,10 +11,14 @@
         .banner { padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 12px; display: none; }
         .approved { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; display: block; }
         .pending { background: #fff3cd; color: #856404; display: block; }
+        .toggle-row { display: flex; background: #eee; padding: 4px; border-radius: 6px; margin-bottom: 15px; }
+        .toggle-btn { flex: 1; padding: 10px; border: none; background: none; font-weight: bold; cursor: pointer; }
+        .toggle-btn.active { background: #007bff; color: white; border-radius: 4px; }
         label { display: block; font-size: 0.8rem; font-weight: bold; color: #666; margin-top: 12px; }
         input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
         .calc-grid { background: #f8f9fa; padding: 15px; border-radius: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; border: 1px solid #ddd; }
         .calc-val { font-weight: bold; color: #007bff; display: block; font-size: 1.2rem; }
+        .troubleshoot { color: #dc3545; font-size: 0.85rem; font-weight: bold; min-height: 1.2em; }
         button#submitBtn { background: #28a745; color: white; padding: 16px; border: none; border-radius: 8px; width: 100%; font-weight: bold; font-size: 1.1rem; margin-top: 15px; cursor: pointer; }
     </style>
 </head>
@@ -23,58 +27,92 @@
 <div id="approvalBanner" class="banner"></div>
 
 <div class="card">
-    <label>AG CODE *</label>
-    <input type="text" id="ag_code" placeholder="Enter AG Code..." oninput="lookupAndCheck()">
-    <div id="autoPopInfo" style="font-size: 0.75rem; color: #28a745; margin-top: 4px; min-height: 1rem;"></div>
-    
-    <label>DEPARTMENT *</label>
-    <select id="department">
-        <option value="Production">Production</option>
-        <option value="Quality">Quality</option>
-    </select>
-    
-    <label>INSPECTION STAGE *</label>
-    <select id="stage" onchange="checkApproval()">
-        <option value="Start-up">Start-up</option>
-        <option value="During production">During production</option>
-    </select>
+    <div class="toggle-row">
+        <button id="modeReport" class="toggle-btn active" onclick="setMode('Report')">Official Report</button>
+        <button id="modeQuick" class="toggle-btn" onclick="setMode('Quick')">Quick Test</button>
+    </div>
+
+    <div id="metaSection">
+        <label>AG CODE *</label>
+        <input type="text" id="ag_code" placeholder="Enter AG Code..." oninput="lookupAndCheck()">
+        <div id="autoPopInfo" style="font-size: 0.75rem; color: #28a745; margin-top: 4px; min-height: 1rem;"></div>
+        
+        <label>DEPARTMENT *</label>
+        <select id="department">
+            <option value="Production">Production</option>
+            <option value="Quality">Quality</option>
+            <option value="Technical">Technical (Setup)</option>
+        </select>
+        
+        <label>INSPECTION STAGE *</label>
+        <select id="stage" onchange="checkApproval()">
+            <option value="Start-up">Start-up</option>
+            <option value="During production">During production</option>
+            <option value="After production">After production</option>
+        </select>
+        
+        <label>INSPECTOR NAME *</label>
+        <input type="text" id="inspector">
+
+        <label>MICROMETER SERIAL #</label>
+        <input type="text" id="micro_serial">
+    </div>
+
+    <hr style="margin: 20px 0; border: 0.5px solid #eee;">
 
     <div style="display:flex; gap:10px;">
         <div style="flex:1;"><label>CAN NO.</label><select id="can_no"><option value="1">1</option><option value="2">2</option></select></div>
         <div style="flex:1;"><label>POINT (1-3)</label><select id="point_no"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
     </div>
 
-    <label>BODY HOOK (mm)</label>
+    <label>VACUUM KPa (Limit > -5)</label>
+    <input type="number" id="vac" step="0.1">
+
+    <label>BODY HOOK (1.80-2.15mm)</label>
     <input type="number" id="bh" step="0.01" oninput="calculate()">
 
-    <label>COVER HOOK (mm)</label>
+    <label>COVER HOOK (1.70-2.10mm)</label>
     <input type="number" id="ch" step="0.01" oninput="calculate()">
 
-    <label>SEAM LENGTH (mm)</label>
+    <label>SEAM LENGTH (2.65-2.95mm)</label>
     <input type="number" id="sl" step="0.01" oninput="calculate()">
 
-    <label>SEAM THICKNESS (mm)</label>
+    <label>SEAM THICKNESS (1.10-1.24mm)</label>
     <input type="number" id="st" step="0.01" oninput="calculate()">
 
+    <label>TIGHTNESS RATING (70-100%)</label>
+    <input type="number" id="tightness">
+
     <div class="calc-grid">
+        <div>Overlap (mm)<span id="res_ov" class="calc-val">0.00</span></div>
         <div>Overlap %<span id="res_ovp" class="calc-val">0%</span></div>
         <div>B.H.B. %<span id="res_bhb" class="calc-val">0%</span></div>
+        <div>Free Space<span id="res_fs" class="calc-val">0.00</span></div>
     </div>
+
+    <div id="aiWarning" class="troubleshoot"></div>
 
     <button id="submitBtn" onclick="submitEntry()">SUBMIT POINT RECORD</button>
 </div>
 
 <script>
-    // SYNCHRONIZED CREDENTIALS
-    const supabaseUrl = 'https://kbpyivgmgipskwiutbtk.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImticHlpdmdtZ2lwc2t3aXV0YnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ3ODYsImV4cCI6MjA5NDk0MDc4Nn0.kGcr57Mdnd9jFepz9ndDFuEUEwD8qRVqIkCNhmgCKPY';
-    const sb = supabase.createClient(supabaseUrl, supabaseKey);
+    const sb = supabase.createClient('https://kbpyivgmgipskwiutbtk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImticHlpdmdtZ2lwc2t3aXV0YnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ3ODYsImV4cCI6MjA5NDk0MDc4Nn0.kGcr57Mdnd9jFepz9ndDFuEUEwD8qRVqIkCNhmgCKPY');
+    let currentMode = 'Report';
+
+    function setMode(m) {
+        currentMode = m;
+        document.getElementById('metaSection').style.display = (m === 'Quick') ? 'none' : 'block';
+        document.getElementById('modeReport').classList.toggle('active', m === 'Report');
+        document.getElementById('modeQuick').classList.toggle('active', m === 'Quick');
+    }
 
     async function lookupAndCheck() {
         const code = document.getElementById('ag_code').value;
         if(code.length < 3) return;
         const { data } = await sb.from('ag_code_master').select('*').eq('ag_code', code).single();
-        if(data) document.getElementById('autoPopInfo').innerText = `Auto-Pop: Size ${data.can_size}`;
+        if(data) {
+            document.getElementById('autoPopInfo').innerText = `Size: ${data.can_size} | Cans: ${data.can_pallet_code} | Lids: ${data.end_pallet_code}`;
+        }
         checkApproval();
     }
 
@@ -87,7 +125,7 @@
             banner.innerText = "✅ APPROVED FOR CLOSING";
             banner.className = "banner approved";
         } else {
-            banner.innerText = "⏳ STARTUP PENDING (2+2 CANS)";
+            banner.innerText = "⏳ STARTUP PENDING (2+2 CANS IN-SPEC)";
             banner.className = "banner pending";
         }
     }
@@ -97,13 +135,23 @@
               ch = parseFloat(document.getElementById('ch').value) || 0,
               sl = parseFloat(document.getElementById('sl').value) || 0,
               st = parseFloat(document.getElementById('st').value) || 0;
-        const te = 0.21, tb = 0.21;
+        const te = 0.21, tb = 0.21; 
+
         const ov = (bh + ch + te) - sl;
         const ovp = (ov / (sl - (2*te + tb))) * 100;
         const bhb = ((bh - 1.1*tb) / (sl - 1.1*(2*te + tb))) * 100;
+        const fs = st - (2*tb + 3*te);
+
+        document.getElementById('res_ov').innerText = ov.toFixed(2);
         document.getElementById('res_ovp').innerText = Math.round(ovp) + "%";
         document.getElementById('res_bhb').innerText = Math.round(bhb) + "%";
-        return { ov, ovp, bhb };
+        document.getElementById('res_fs').innerText = fs.toFixed(2);
+
+        let msg = "";
+        if(ovp > 0 && ovp < 45) msg = "⚠️ LOW OVERLAP: Check 1st operation roll tightness.";
+        if(bhb > 0 && bhb < 70) msg = "⚠️ LOW BHB: Check pin height or body hook.";
+        document.getElementById('aiWarning').innerText = msg;
+        return { ov, ovp, bhb, fs };
     }
 
     async function submitEntry() {
@@ -112,18 +160,28 @@
         btn.innerText = "Saving...";
         const entry = {
             ag_code: document.getElementById('ag_code').value,
+            inspector_name: document.getElementById('inspector').value,
             department: document.getElementById('department').value,
             inspection_stage: document.getElementById('stage').value,
+            micrometer_serial: document.getElementById('micro_serial').value,
+            test_type: currentMode,
             can_number: parseInt(document.getElementById('can_no').value),
             point_number: parseInt(document.getElementById('point_no').value),
-            body_hook: parseFloat(document.getElementById('bh').value),
-            cover_hook: parseFloat(document.getElementById('ch').value),
-            seam_length: parseFloat(document.getElementById('sl').value),
-            seam_thickness: parseFloat(document.getElementById('st').value),
-            overlap_percent: c.ovp, bhb_percent: c.bhb
+            vacuum_kpa: parseFloat(document.getElementById('vac').value) || 0,
+            body_hook: parseFloat(document.getElementById('bh').value) || 0,
+            cover_hook: parseFloat(document.getElementById('ch').value) || 0,
+            seam_length: parseFloat(document.getElementById('sl').value) || 0,
+            seam_thickness: parseFloat(document.getElementById('st').value) || 0,
+            tightness_rating: parseInt(document.getElementById('tightness').value) || 0,
+            overlap_mm: c.ov, overlap_percent: c.ovp, bhb_percent: c.bhb, freespace: c.fs
         };
         const { error } = await sb.from('double_seam_inspection_log').insert([entry]);
-        if(!error) { alert("Saved!"); checkApproval(); } else { alert("Error: " + error.message); }
+        if(!error) { 
+            alert("Point saved!"); 
+            const currentPt = parseInt(document.getElementById('point_no').value);
+            if(currentPt < 3) document.getElementById('point_no').value = currentPt + 1;
+            checkApproval(); 
+        } else { alert("Error: " + error.message); }
         btn.innerText = "SUBMIT POINT RECORD";
     }
 </script>
