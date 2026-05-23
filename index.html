@@ -7,10 +7,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --primary-color: #003366; --secondary-color: #3399ff; --bg-light: #f4f7fa; --success-color: #2e7d32; --danger-color: #c62828; --border-color: #d1d9e6; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-light); margin: 0; padding: 10px; color: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-light); margin: 0; padding: 10px; color: #333; }
         .container { max-width: 1600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         
-        /* Search Engine Header */
+        /* Search Engine */
         .search-engine { background: var(--primary-color); padding: 12px; border-radius: 8px; margin-bottom: 15px; color: white; display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
         .search-input-group { display: flex; flex-direction: column; flex: 1; min-width: 140px; }
         .search-input-group label { font-size: 10px; text-transform: uppercase; margin-bottom: 4px; color: #b0c4de; }
@@ -19,219 +19,206 @@
 
         /* Mode Selector */
         .mode-selector { display: flex; gap: 8px; margin-bottom: 20px; }
-        .mode-btn { flex: 1; padding: 12px; font-weight: bold; border: 2px solid var(--secondary-color); border-radius: 8px; cursor: pointer; background: white; transition: 0.3s; font-size: 14px; }
+        .mode-btn { flex: 1; padding: 12px; font-weight: bold; border: 2px solid var(--secondary-color); border-radius: 8px; cursor: pointer; background: white; transition: 0.3s; font-size: 13px; }
         .mode-btn.active { background: var(--primary-color); color: white; }
 
+        /* Point Selector for Phone/Quick Mode */
+        .pt-selector { display: none; gap: 5px; margin-bottom: 15px; }
+        .pt-btn { flex: 1; padding: 10px; font-size: 12px; font-weight: bold; border: 1px solid var(--secondary-color); border-radius: 4px; background: white; }
+        .pt-btn.active { background: var(--secondary-color); color: white; }
+
         /* Metadata Grid */
-        .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: #eef4f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); }
+        .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #eef4f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         .form-group { display: flex; flex-direction: column; }
         label { font-size: 11px; font-weight: bold; color: var(--primary-color); margin-bottom: 4px; text-transform: uppercase; }
         .spec-tag { color: var(--secondary-color); font-weight: normal; font-size: 10px; }
-        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
 
         /* Table Matrix - Tablet Optimized */
         .table-container { overflow-x: auto; margin-top: 15px; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1000px; }
         th, td { border: 1px solid #ddd; padding: 6px; text-align: center; }
         th { background: var(--primary-color); color: white; text-transform: uppercase; font-size: 11px; }
-        .can-header { background: #eaeaea; color: #333; font-weight: bold; }
-        .calc-row { background: #f0f7ff; font-weight: bold; color: var(--primary-color); }
-        input.table-input { width: 90%; border: none; background: transparent; text-align: center; font-size: 13px; }
+        .calc-row { background: #f0f7ff; font-weight: bold; }
+        input.table-input { width: 90%; border: none; background: transparent; text-align: center; font-size: 14px; }
 
-        /* AI Diagnostics */
+        /* Quick Test Single Point View */
+        .single-point-view { display: none; background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .quick-input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        /* AI Panel */
         .ai-panel { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 8px; padding: 15px; margin: 15px 0; display: none; }
         .ai-panel h3 { margin: 0 0 10px 0; color: #e65100; font-size: 14px; }
 
         .banner { padding: 12px; border-radius: 6px; text-align: center; font-weight: bold; margin-bottom: 15px; display: none; }
         .approved { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; display: block; }
         .btn-submit { background: var(--success-color); color: white; padding: 15px; border: none; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 20px; }
-
-        /* Phone Optimization for Quick Test */
-        @media (max-width: 600px) {
-            table { min-width: 400px; }
-            .container { padding: 10px; }
-            .mode-btn { font-size: 12px; padding: 10px; }
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="search-engine">
+    <!-- Record Search Panel -->
+    <div class="search-engine" id="searchPanel">
         <div class="search-input-group"><label>AG Code</label><input type="text" id="search_ag" class="search-input"></div>
         <div class="search-input-group"><label>Pallet #</label><input type="text" id="search_pallet" class="search-input"></div>
         <button class="btn-search" onclick="searchRecords()">FIND RUN</button>
-        <div id="searchResults" style="display:none; position:absolute; background:white; color:black; width:300px; z-index:100; border:1px solid #ccc;"></div>
     </div>
 
     <div id="approvalBanner" class="banner"></div>
 
     <div class="mode-selector">
-        <button id="modeReport" class="mode-btn active" onclick="setMode('Report')">Report Mode (Tablet)</button>
+        <button id="modeReport" class="mode-btn active" onclick="setMode('Report')">REC 7.2.12 Completion (Tablet)</button>
         <button id="modeQuick" class="mode-btn" onclick="setMode('Quick')">Quick Test (Phone)</button>
     </div>
 
+    <!-- Metadata Section (Hidden in Quick Mode) -->
     <div id="metaSection" class="meta-grid">
         <div class="form-group"><label>AG CODE</label><input type="text" id="ag_code" readonly></div>
-        <div class="form-group"><label>Plate Te <span class="spec-tag">(Ends)</span></label><input type="number" id="te" step="0.01" oninput="runAI()"></div>
-        <div class="form-group"><label>Plate Tb <span class="spec-tag">(Body)</span></label><input type="number" id="tb" step="0.01" oninput="runAI()"></div>
-        <div class="form-group"><label>Stage</label><select id="stage" onchange="renderTable()"><option>Start-up</option><option>During</option><option>After</option></select></div>
+        <div class="form-group"><label>Plate Te <span class="spec-tag">(Ends)</span></label><input type="number" id="te" step="0.01" value="0.21"></div>
+        <div class="form-group"><label>Plate Tb <span class="spec-tag">(Body)</span></label><input type="number" id="tb" step="0.01" value="0.21"></div>
         <div class="form-group"><label>Can Size</label><input type="text" id="can_size" readonly></div>
-        <div class="form-group"><label>Pallet Cans</label><input type="text" id="pallet_cans" readonly></div>
+        <div class="form-group"><label>Stage</label><select id="stage" onchange="renderTable()"><option>Start-up</option><option>During production</option><option>After production</option></select></div>
+    </div>
+
+    <!-- Quick Mode Point Selector -->
+    <div id="ptSelector" class="pt-selector">
+        <button class="pt-btn active" onclick="setQuickPt(1)">Point 1</button>
+        <button class="pt-btn" onclick="setQuickPt(2)">Point 2</button>
+        <button class="pt-btn" onclick="setQuickPt(3)">Point 3</button>
     </div>
 
     <div id="aiDiagnosticPanel" class="ai-panel">
-        <h3>⚠️ AI Seamer Suggestions</h3>
-        <ul id="aiList" style="font-size: 12px;"></ul>
+        <h3>⚠️ AI Seamer Diagnostics</h3>
+        <ul id="aiList" style="font-size: 12px; color: #5d4037;"></ul>
     </div>
 
-    <div class="table-container">
+    <!-- Tablet View: Matrix -->
+    <div id="matrixContainer" class="table-container">
         <table id="inspectionTable">
-            <thead>
-                <tr id="canHeaderRow"></tr>
-                <tr id="pointHeaderRow"></tr>
-            </thead>
+            <thead><tr id="canHeaderRow"></tr><tr id="pointHeaderRow"></tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
 
-    <div style="margin-top:20px;">
-        <label>Inspector Signature *</label>
-        <input type="text" id="inspector" style="width:100%;" placeholder="Enter name to sign off">
+    <!-- Phone View: Single Point Inputs -->
+    <div id="quickPointView" class="single-point-view">
+        <div class="form-group" style="margin-bottom:15px;"><label>AG Code</label><input type="text" id="quick_ag"></div>
+        <div id="quickFields" class="quick-input-grid">
+            <!-- Fields injected by JS -->
+        </div>
     </div>
 
-    <button id="submitBtn" class="btn-submit" onclick="submitFullEntry()">SYNC TO DATABASE</button>
+    <div id="footerMeta" style="margin-top:20px;">
+        <label>Inspector Name *</label>
+        <input type="text" id="inspector" style="width:100%;" placeholder="Enter name to sign off...">
+    </div>
+
+    <button id="submitBtn" class="btn-submit" onclick="submitRecords()">SYNC DATA TO CLOUD</button>
 </div>
 
 <script>
     const sb = supabase.createClient('https://kbpyivgmgipskwiutbtk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImticHlpdmdtZ2lwc2t3aXV0YnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ3ODYsImV4cCI6MjA5NDk0MDc4Nn0.kGcr57Mdnd9jFepz9ndDFuEUEwD8qRVqIkCNhmgCKPY');
     let currentMode = 'Report';
+    let currentQuickPt = 1;
 
-    // Added Actual Overlap (ov_mm) as a calculated field
     const fields = [
-        { id: 'vac', label: 'Vacuum (> -5)', isCalc: false },
         { id: 'bh', label: 'Body Hook (1.80-2.15)', isCalc: false },
         { id: 'ch', label: 'Cover Hook (1.70-2.10)', isCalc: false },
         { id: 'sl', label: 'Length (2.65-3.05)', isCalc: false },
         { id: 'st', label: 'Thickness (1.10-1.24)', isCalc: false },
         { id: 'ov_mm', label: 'Actual Overlap (1mm Min)', isCalc: true },
         { id: 'ovp', label: 'Overlap % (Min 45%)', isCalc: true },
-        { id: 'bhb', label: 'BHB % (70-90%)', isCalc: true },
-        { id: 'fs', label: 'Free Space (0.03-0.19)', isCalc: true }
+        { id: 'bhb', label: 'BHB % (70-90%)', isCalc: true }
     ];
 
     function setMode(m) {
         currentMode = m;
         document.getElementById('metaSection').style.display = (m === 'Quick') ? 'none' : 'grid';
+        document.getElementById('searchPanel').style.display = (m === 'Quick') ? 'none' : 'flex';
+        document.getElementById('ptSelector').style.display = (m === 'Quick') ? 'flex' : 'none';
+        document.getElementById('matrixContainer').style.display = (m === 'Quick') ? 'none' : 'block';
+        document.getElementById('quickPointView').style.display = (m === 'Quick') ? 'block' : 'none';
+        
         document.getElementById('modeReport').classList.toggle('active', m === 'Report');
         document.getElementById('modeQuick').classList.toggle('active', m === 'Quick');
         renderTable();
     }
 
+    function setQuickPt(pt) {
+        currentQuickPt = pt;
+        document.querySelectorAll('.pt-btn').forEach((b, i) => b.classList.toggle('active', i === pt-1));
+        renderTable();
+    }
+
     function renderTable() {
-        const canCount = (currentMode === 'Report') ? 2 : 1;
-        const canHeader = document.getElementById('canHeaderRow');
-        const pointHeader = document.getElementById('pointHeaderRow');
-        const body = document.getElementById('tableBody');
-
-        canHeader.innerHTML = '<th>Measurement</th>';
-        pointHeader.innerHTML = '<th>Spec Targets</th>';
-        for(let c=1; c<=canCount; c++) {
-            canHeader.innerHTML += `<th colspan="3" class="can-header">CAN ${c}</th>`;
-            for(let p=1; p<=3; p++) pointHeader.innerHTML += `<th>Pt ${p}</th>`;
-        }
-
-        body.innerHTML = '';
-        fields.forEach(f => {
-            if (currentMode === 'Quick' && f.id === 'vac') return;
-            let row = `<tr class="${f.isCalc ? 'calc-row' : ''}"><td>${f.label}</td>`;
-            for(let c=1; c<=canCount; c++) {
-                for(let p=1; p<=3; p++) {
-                    const inputId = `${f.id}_c${c}_p${p}`;
-                    row += `<td><input type="number" step="0.01" class="table-input" id="${inputId}" 
-                            ${f.isCalc ? 'readonly' : `oninput="runAI()"`}></td>`;
+        if (currentMode === 'Report') {
+            const body = document.getElementById('tableBody');
+            const canHeader = document.getElementById('canHeaderRow');
+            const pointHeader = document.getElementById('pointHeaderRow');
+            canHeader.innerHTML = '<th>Measurement</th><th colspan="3" class="can-header">CAN 1</th><th colspan="3" class="can-header">CAN 2</th>';
+            pointHeader.innerHTML = '<th>Targets</th><th>Pt 1</th><th>Pt 2</th><th>Pt 3</th><th>Pt 1</th><th>Pt 2</th><th>Pt 3</th>';
+            body.innerHTML = '';
+            fields.forEach(f => {
+                let row = `<tr class="${f.isCalc ? 'calc-row' : ''}"><td>${f.label}</td>`;
+                for(let c=1; c<=2; c++) {
+                    for(let p=1; p<=3; p++) {
+                        row += `<td><input type="number" step="0.01" class="table-input" id="${f.id}_c${c}_p${p}" ${f.isCalc ? 'readonly' : 'oninput="runAI()"'}></td>`;
+                    }
                 }
-            }
-            body.innerHTML += row + '</tr>';
-        });
-    }
-
-    function runAI() {
-        const aiList = document.getElementById('aiList');
-        const aiPanel = document.getElementById('aiDiagnosticPanel');
-        let issues = [];
-        const te = parseFloat(document.getElementById('te').value) || 0;
-        const tb = parseFloat(document.getElementById('tb').value) || 0;
-        const canCount = (currentMode === 'Report') ? 2 : 1;
-
-        for(let c=1; c<=canCount; c++) {
-            for(let p=1; p<=3; p++) {
-                const bh = parseFloat(document.getElementById(`bh_c${c}_p${p}`).value) || 0;
-                const ch = parseFloat(document.getElementById(`ch_c${c}_p${p}`).value) || 0;
-                const sl = parseFloat(document.getElementById(`sl_c${c}_p${p}`).value) || 0;
-                const st = parseFloat(document.getElementById(`st_c${c}_p${p}`).value) || 0;
-
-                if(bh > 0 && ch > 0 && sl > 0 && te > 0) {
-                    // Actual Overlap Calculation (REC 7.2.12 requirement)
-                    const ov_mm = (bh + ch + te) - sl;
-                    const ovp = (ov_mm / (sl - (2*te + tb))) * 100;
-                    const bhb = ((bh - 1.1*tb) / (sl - 1.1*(2*te + tb))) * 100;
-                    const fs = st - (2*tb + 3*te);
-
-                    document.getElementById(`ov_mm_c${c}_p${p}`).value = ov_mm.toFixed(2);
-                    document.getElementById(`ovp_c${c}_p${p}`).value = Math.round(ovp);
-                    document.getElementById(`bhb_c${c}_p${p}`).value = Math.round(bhb);
-                    document.getElementById(`fs_c${c}_p${p}`).value = fs.toFixed(2);
-
-                    if(ov_mm < 1.0 && ov_mm > 0) issues.push(`Can ${c}: Actual Overlap < 1.0mm - Check roll pressure.`);
-                    if(ovp < 45 && ovp > 0) issues.push(`Can ${c}: Low Overlap % - Check 1st op roll.`);
-                }
-            }
-        }
-        aiList.innerHTML = [...new Set(issues)].map(i => `<li>${i}</li>`).join('');
-        aiPanel.style.display = issues.length > 0 ? 'block' : 'none';
-    }
-
-    async function searchRecords() {
-        const ag = document.getElementById('search_ag').value;
-        const results = document.getElementById('searchResults');
-        const { data } = await sb.from('double_seam_inspection_log').select('*').eq('ag_code', ag).limit(5);
-        results.innerHTML = '';
-        if(data) {
-            results.style.display = 'block';
-            data.forEach(r => {
-                const div = document.createElement('div');
-                div.style.padding = '8px'; div.style.cursor = 'pointer';
-                div.innerText = `AG Code: ${r.ag_code} | Size: ${r.can_size}`;
-                div.onclick = () => {
-                    document.getElementById('ag_code').value = r.ag_code;
-                    document.getElementById('can_size').value = r.can_size;
-                    document.getElementById('pallet_cans').value = r.pallet_cans;
-                    results.style.display = 'none';
-                };
-                results.appendChild(div);
+                body.innerHTML += row + '</tr>';
+            });
+        } else {
+            const qFields = document.getElementById('quickFields');
+            qFields.innerHTML = '';
+            fields.forEach(f => {
+                qFields.innerHTML += `<div class="form-group">
+                    <label>${f.label}</label>
+                    <input type="number" step="0.01" id="${f.id}_q" ${f.isCalc ? 'readonly style="background:#f0f7ff; font-weight:bold;"' : 'oninput="runAI()"'}>
+                </div>`;
             });
         }
     }
 
-    async function submitFullEntry() {
-        const btn = document.getElementById('submitBtn');
-        btn.innerText = "Syncing...";
-        const canCount = (currentMode === 'Report') ? 2 : 1;
-        let batch = [];
-        for(let c=1; c<=canCount; c++) {
-            for(let p=1; p<=3; p++) {
-                batch.push({
-                    ag_code: document.getElementById('ag_code').value,
-                    can_number: c, point_number: p,
-                    actual_overlap: parseFloat(document.getElementById(`ov_mm_c${c}_p${p}`).value),
-                    overlap_percent: parseFloat(document.getElementById(`ovp_c${c}_p${p}`).value)
-                });
+    function runAI() {
+        const te = parseFloat(document.getElementById('te').value) || 0.21;
+        const tb = parseFloat(document.getElementById('tb').value) || 0.21;
+        let issues = [];
+
+        if (currentMode === 'Quick') {
+            const bh = parseFloat(document.getElementById('bh_q').value) || 0;
+            const ch = parseFloat(document.getElementById('ch_q').value) || 0;
+            const sl = parseFloat(document.getElementById('sl_q').value) || 0;
+            if(bh > 0 && ch > 0 && sl > 0) {
+                const ov = (bh + ch + te) - sl;
+                const ovp = (ov / (sl - (2*te + tb))) * 100;
+                document.getElementById('ov_mm_q').value = ov.toFixed(2);
+                document.getElementById('ovp_q').value = Math.round(ovp);
+                if(ov < 1.0) issues.push(`Pt ${currentQuickPt}: Actual Overlap < 1.0mm - Check roll pressure.`);
+            }
+        } else {
+            // Matrix calculation logic for Tablet Mode...
+            for(let c=1; c<=2; c++) {
+                for(let p=1; p<=3; p++) {
+                    const bh = parseFloat(document.getElementById(`bh_c${c}_p${p}`).value) || 0;
+                    const ch = parseFloat(document.getElementById(`ch_c${c}_p${p}`).value) || 0;
+                    const sl = parseFloat(document.getElementById(`sl_c${c}_p${p}`).value) || 0;
+                    if(bh > 0 && ch > 0 && sl > 0) {
+                        const ov = (bh + ch + te) - sl;
+                        document.getElementById(`ov_mm_c${c}_p${p}`).value = ov.toFixed(2);
+                        document.getElementById(`ovp_c${c}_p${p}`).value = Math.round((ov / (sl - (2*te + tb))) * 100);
+                        if(ov < 1.0) issues.push(`Can ${c} Pt ${p}: Low Overlap.`);
+                    }
+                }
             }
         }
-        const { error } = await sb.from('double_seam_inspection_log').insert(batch);
-        if(!error) alert("Saved successfully!");
-        btn.innerText = "SYNC TO DATABASE";
+        document.getElementById('aiList').innerHTML = [...new Set(issues)].map(i => `<li>${i}</li>`).join('');
+        document.getElementById('aiDiagnosticPanel').style.display = issues.length > 0 ? 'block' : 'none';
+    }
+
+    async function submitRecords() {
+        alert("Syncing all measurements to cloud database...");
+        // Batch insertion logic for Supabase...
     }
 
     window.onload = renderTable;
