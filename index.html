@@ -3,133 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Double seam inspection log - Official Specs</title>
+    <title>Double Seam Inspection Log | REC 7.2.12</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f4f7f6; padding: 10px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        .banner { padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 12px; display: none; }
+        :root {
+            --primary-color: #003366;
+            --secondary-color: #3399ff;
+            --bg-light: #f4f7fa;
+            --success-color: #2e7d32;
+            --danger-color: #c62828;
+            --border-color: #d1d9e6;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-light); margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1000px; margin: 0 auto; background-color: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        h1 { color: var(--primary-color); border-bottom: 3px solid var(--secondary-color); padding-bottom: 10px; margin-top: 0; font-size: 22px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+        
+        .mode-selector { display: flex; gap: 15px; margin-bottom: 25px; }
+        .mode-btn { flex: 1; padding: 12px; font-size: 14px; font-weight: bold; border: 2px solid var(--secondary-color); border-radius: 8px; cursor: pointer; background: white; color: var(--primary-color); transition: all 0.3s ease; }
+        .mode-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+        .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: #eef4f9; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid var(--border-color); }
+        
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 12px; font-weight: bold; color: var(--primary-color); margin-bottom: 5px; text-transform: uppercase; }
+        .spec-tag { color: var(--secondary-color); font-weight: normal; margin-left: 4px; text-transform: none; }
+        
+        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        input:focus { border-color: var(--secondary-color); outline: none; box-shadow: 0 0 5px rgba(51,153,255,0.2); }
+
+        .calibration-box { padding: 10px; border-radius: 6px; font-weight: bold; text-align: center; font-size: 12px; border: 1px solid #ddd; margin-top: 22px; }
+        .cal-pass { background: #e8f5e9; color: var(--success-color); border-color: #a5d6a7; }
+        .cal-fail { background: #ffebee; color: var(--danger-color); border-color: #ef9a9a; }
+
+        .inspection-card { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; margin-top: 20px; }
+        .card-header { background: var(--primary-color); color: white; padding: 12px 20px; font-weight: bold; font-size: 14px; text-transform: uppercase; }
+        .card-body { padding: 20px; }
+
+        .calc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-top: 20px; }
+        .calc-item { display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .calc-val { font-size: 20px; font-weight: bold; color: var(--primary-color); margin-top: 5px; }
+
+        .banner { padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; display: none; }
         .approved { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; display: block; }
         .pending { background: #fff3cd; color: #856404; display: block; }
-        .toggle-row { display: flex; background: #eee; padding: 4px; border-radius: 6px; margin-bottom: 15px; }
-        .toggle-btn { flex: 1; padding: 10px; border: none; background: none; font-weight: bold; cursor: pointer; }
-        .toggle-btn.active { background: #007bff; color: white; border-radius: 4px; }
-        label { display: block; font-size: 0.8rem; font-weight: bold; color: #666; margin-top: 12px; }
-        .spec-label { color: #007bff; font-weight: normal; margin-left: 4px; }
-        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
-        .calc-grid { background: #f8f9fa; padding: 15px; border-radius: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; border: 1px solid #ddd; }
-        .calc-val { font-weight: bold; color: #007bff; display: block; font-size: 1.2rem; }
-        button#submitBtn { background: #28a745; color: white; padding: 16px; border: none; border-radius: 8px; width: 100%; font-weight: bold; font-size: 1.1rem; margin-top: 15px; cursor: pointer; }
+
+        .btn-submit { background-color: var(--success-color); color: white; padding: 15px 30px; border: none; border-radius: 6px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 20px; transition: background 0.2s; }
+        .btn-submit:hover { background-color: #1b5e20; }
+        
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="approvalBanner" class="banner"></div>
+<div class="container">
+    <h1>REC 7.2.12 INSPECTION <span id="workspaceTitle" style="font-size: 12px; opacity: 0.7;">WORKSPACE</span></h1>
 
-<div class="card">
-    <div class="toggle-row">
-        <button id="modeReport" class="toggle-btn active" onclick="setMode('Report')">REC 7.2.12 Completion</button>
-        <button id="modeQuick" class="toggle-btn" onclick="setMode('Quick')">Quick Test</button>
+    <div id="approvalBanner" class="banner"></div>
+
+    <div class="mode-selector">
+        <button id="modeReport" class="mode-btn active" onclick="setMode('Report')">REC 7.2.12 Completion</button>
+        <button id="modeQuick" class="mode-btn" onclick="setMode('Quick')">Quick Test Mode</button>
     </div>
 
-    <div id="metaSection">
-        <label>AG CODE *</label>
-        <input type="text" id="ag_code" oninput="lookupAndCheck()">
-        <div id="autoPopInfo" style="font-size: 0.75rem; color: #28a745; margin-top: 4px; min-height: 1rem;"></div>
-        
-        <label>DEPARTMENT *</label>
-        <select id="department">
-            <option value="Production">Production</option>
-            <option value="Quality">Quality</option>
-            <option value="Technical">Technical (Setup)</option>
-        </select>
-        
-        <label>INSPECTION STAGE *</label>
-        <select id="stage" onchange="checkApproval()">
-            <option value="Start-up">Start-up</option>
-            <option value="During production">During production</option>
-            <option value="After production">After production</option>
-        </select>
-
-        <label>MICROMETER SERIAL #</label>
-        <input type="text" id="micro_serial">
-
-        <label>MICROMETER VERIFIED <span class="spec-label">(1.21mm ± 0.02mm)</span></label>
-        <input type="number" id="micro_check" step="0.01">
+    <!-- Metadata Grid -->
+    <div id="metaSection" class="meta-grid">
+        <div class="form-group">
+            <label>AG CODE</label>
+            <input type="text" id="ag_code" oninput="lookupAndCheck()">
+            <div id="autoPopInfo" style="font-size: 11px; color: var(--success-color); margin-top: 5px; font-weight: bold;"></div>
+        </div>
+        <div class="form-group">
+            <label>Department</label>
+            <select id="department">
+                <option value="Production">Production</option>
+                <option value="Quality">Quality</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Inspection Stage</label>
+            <select id="stage" onchange="checkApproval()">
+                <option value="Start-up">Start-up</option>
+                <option value="During production">During production</option>
+                <option value="After production">After production</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Micrometer Serial</label>
+            <input type="text" id="micro_serial">
+        </div>
+        <div class="form-group">
+            <label>Verification Check <span class="spec-tag">(1.21mm ± 0.02)</span></label>
+            <input type="number" id="micro_check" step="0.01" oninput="validateMicro()">
+        </div>
+        <div class="form-group">
+            <div id="calibStatus" class="calibration-box cal-fail">UNVERIFIED</div>
+        </div>
     </div>
 
-    <hr style="margin: 20px 0; border: 0.5px solid #eee;">
+    <div class="inspection-card">
+        <div class="card-header">Actual Can Inspection Data</div>
+        <div class="card-body">
+            <div class="meta-grid" style="background:none; padding:0; border:none; margin-bottom:15px;">
+                <div class="form-group">
+                    <label>Can Number</label>
+                    <select id="can_no"><option value="1">Can 1</option><option value="2">Can 2</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Measurement Point</label>
+                    <select id="point_no"><option value="1">Point 1</option><option value="2">Point 2</option><option value="3">Point 3</option></select>
+                </div>
+            </div>
 
-    <div style="display:flex; gap:10px;">
-        <div style="flex:1;"><label>CAN NO.</label><select id="can_no"><option value="1">1</option><option value="2">2</option></select></div>
-        <div style="flex:1;"><label>POINT (1-3)</label><select id="point_no"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+            <div class="meta-grid" style="background:none; padding:0; border:none;">
+                <div class="form-group" id="vacuumRow">
+                    <label>Vacuum KPa <span class="spec-tag">(> -5 KPa)</span></label>
+                    <input type="number" id="vac" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Body Hook <span class="spec-tag">(1.80-2.15 mm)</span></label>
+                    <input type="number" id="bh" step="0.01" oninput="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Cover Hook <span class="spec-tag">(1.70-2.10 mm)</span></label>
+                    <input type="number" id="ch" step="0.01" oninput="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Seam Length <span class="spec-tag">(2.65-3.05 External)</span></label>
+                    <input type="number" id="sl" step="0.01" oninput="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Thickness <span class="spec-tag">(Ext 1.24/Int 1.20)</span></label>
+                    <input type="number" id="st" step="0.01" oninput="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Tightness <span class="spec-tag">(70-100%)</span></label>
+                    <input type="number" id="tightness">
+                </div>
+            </div>
+
+            <!-- Calculation Grid with Written Specs -->
+            <div class="calc-grid">
+                <div class="calc-item">
+                    <label>Actual Overlap <span class="spec-tag">(1.0mm Min)</span></label>
+                    <span id="res_ov" class="calc-val">0.00</span>
+                </div>
+                <div class="calc-item">
+                    <label>Overlap % <span class="spec-tag">(Min 45%)</span></label>
+                    <span id="res_ovp" class="calc-val">0%</span>
+                </div>
+                <div class="calc-item">
+                    <label>B.H.B. % <span class="spec-tag">(70 - 90%)</span></label>
+                    <span id="res_bhb" class="calc-val">0%</span>
+                </div>
+                <div class="calc-item">
+                    <label>Free Space <span class="spec-tag">(Ext 0.19 / Int 0.17)</span></label>
+                    <span id="res_fs" class="calc-val">0.00</span>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="vacuumRow">
-        <label>VACUUM KPa <span class="spec-label">(> -5 KPa)</span></label>
-        <input type="number" id="vac" step="0.1">
+    <div id="footerMetadata" style="margin-top:20px;">
+        <label>Inspected By (Signature Name) *</label>
+        <input type="text" id="inspector" placeholder="Type name to sign off...">
     </div>
 
-    <label>BODY HOOK <span class="spec-label">(1.80 - 2.15 mm)</span></label>
-    <input type="number" id="bh" step="0.01" oninput="calculate()">
-
-    <label>COVER HOOK <span class="spec-label">(1.70 - 2.10 mm)</span></label>
-    <input type="number" id="ch" step="0.01" oninput="calculate()">
-
-    <label>SEAM LENGTH <span class="spec-label">(2.65 - 3.05 mm External)</span></label>
-    <input type="number" id="sl" step="0.01" oninput="calculate()">
-
-    <label>SEAM THICKNESS <span class="spec-label">(Ext: 1.10 - 1.24 mm | Int: 1.10 - 1.20 mm)</span></label>
-    <input type="number" id="st" step="0.01" oninput="calculate()">
-
-    <label>TIGHTNESS RATING <span class="spec-label">(70 - 100%)</span></label>
-    <input type="number" id="tightness">
-
-    <!-- Calculation Grid with Static Specifications next to Labels -->
-    <div class="calc-grid">
-        <div>Actual Overlap (mm) <span class="spec-label">(1.0mm Min)</span><span id="res_ov" class="calc-val">0.00</span></div>
-        <div>Overlap % <span class="spec-label">(Min 45%)</span><span id="res_ovp" class="calc-val">0%</span></div>
-        <div>B.H.B. % <span class="spec-label">(70 - 90%)</span><span id="res_bhb" class="calc-val">0%</span></div>
-        <div>Free Space <span class="spec-label">(Ext: 0.03-0.19 | Int: 0.06-0.17)</span><span id="res_fs" class="calc-val">0.00</span></div>
-    </div>
-
-    <label>INSPECTED BY (SIGNATURE) *</label>
-    <input type="text" id="inspector">
-
-    <button id="submitBtn" onclick="submitEntry()">SUBMIT POINT RECORD</button>
+    <button id="submitBtn" class="btn-submit" onclick="submitEntry()">SUBMIT POINT RECORD</button>
 </div>
 
 <script>
     const sb = supabase.createClient('https://kbpyivgmgipskwiutbtk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImticHlpdmdtZ2lwc2t3aXV0YnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ3ODYsImV4cCI6MjA5NDk0MDc4Nn0.kGcr57Mdnd9jFepz9ndDFuEUEwD8qRVqIkCNhmgCKPY');
-    let currentAppMode = 'Report';
+    let appMode = 'Report';
 
     function setMode(m) {
-        currentAppMode = m;
-        document.getElementById('metaSection').style.display = (m === 'Quick') ? 'none' : 'block';
-        document.getElementById('vacuumRow').style.display = (m === 'Quick') ? 'none' : 'block';
+        appMode = m;
+        document.getElementById('metaSection').style.display = (m === 'Quick') ? 'none' : 'grid';
+        document.getElementById('vacuumRow').style.display = (m === 'Quick') ? 'none' : 'flex';
         document.getElementById('modeReport').classList.toggle('active', m === 'Report');
         document.getElementById('modeQuick').classList.toggle('active', m === 'Quick');
+        document.getElementById('workspaceTitle').innerText = (m === 'Quick') ? 'QUICK TEST MODE' : 'REC 7.2.12 WORKSPACE';
+    }
+
+    function validateMicro() {
+        const val = parseFloat(document.getElementById('micro_check').value);
+        const status = document.getElementById('calibStatus');
+        if (val >= 1.19 && val <= 1.23) {
+            status.innerText = "VERIFIED"; status.className = "calibration-box cal-pass";
+        } else {
+            status.innerText = "OUT OF SPEC"; status.className = "calibration-box cal-fail";
+        }
     }
 
     async function lookupAndCheck() {
         const code = document.getElementById('ag_code').value;
         if(code.length < 3) return;
         const { data } = await sb.from('ag_code_master').select('*').eq('ag_code', code).single();
-        if(data) document.getElementById('autoPopInfo').innerText = `Size: ${data.can_size} | Cans: ${data.can_pallet_code}`;
+        if(data) document.getElementById('autoPopInfo').innerText = `SIZE: ${data.can_size} | PALLET: ${data.can_pallet_code}`;
         checkApproval();
     }
 
     async function checkApproval() {
         const code = document.getElementById('ag_code').value;
         const banner = document.getElementById('approvalBanner');
-        if(code.length < 3) return;
+        if(code.length < 3 || appMode === 'Quick') { banner.style.display = 'none'; return; }
         const { data } = await sb.from('startup_approval_dashboard').select('*').eq('ag_code', code).single();
         if(data && data.production_ready && data.quality_ready) {
-            banner.innerText = "✅ APPROVED FOR CLOSING";
-            banner.className = "banner approved";
+            banner.innerText = "✅ APPROVED FOR CLOSING"; banner.className = "banner approved";
         } else {
-            banner.innerText = "⏳ STARTUP PENDING (2+2 CANS)";
-            banner.className = "banner pending";
+            banner.innerText = "⏳ STARTUP PENDING (2+2 CANS)"; banner.className = "banner pending";
         }
     }
 
@@ -153,24 +236,28 @@
     async function submitEntry() {
         const c = calculate();
         const btn = document.getElementById('submitBtn');
-        btn.innerText = "Saving...";
+        btn.innerText = "Saving to Database...";
         const entry = {
             ag_code: document.getElementById('ag_code').value,
             inspector_name: document.getElementById('inspector').value,
             department: document.getElementById('department').value,
             inspection_stage: document.getElementById('stage').value,
-            test_type: currentAppMode,
+            test_type: appMode,
             can_number: parseInt(document.getElementById('can_no').value),
             point_number: parseInt(document.getElementById('point_no').value),
-            vacuum_kpa: (currentAppMode === 'Quick') ? 0 : parseFloat(document.getElementById('vac').value) || 0,
-            body_hook: parseFloat(document.getElementById('bh').value) || 0,
-            cover_hook: parseFloat(document.getElementById('ch').value) || 0,
-            seam_length: parseFloat(document.getElementById('sl').value) || 0,
-            seam_thickness: parseFloat(document.getElementById('st').value) || 0,
+            vacuum_kpa: (appMode === 'Quick') ? 0 : parseFloat(document.getElementById('vac').value) || 0,
+            body_hook: parseFloat(document.getElementById('bh').value),
+            cover_hook: parseFloat(document.getElementById('ch').value),
+            seam_length: parseFloat(document.getElementById('sl').value),
+            seam_thickness: parseFloat(document.getElementById('st').value),
             overlap_percent: c.ovp, bhb_percent: c.bhb, freespace: c.fs
         };
         const { error } = await sb.from('double_seam_inspection_log').insert([entry]);
-        if(!error) { alert("Point saved!"); checkApproval(); } else { alert("Error: " + error.message); }
+        if(!error) { 
+            alert("Point saved successfully!"); checkApproval(); 
+            const pt = parseInt(document.getElementById('point_no').value);
+            if(pt < 3) document.getElementById('point_no').value = pt + 1;
+        } else { alert("Error: " + error.message); }
         btn.innerText = "SUBMIT POINT RECORD";
     }
 </script>
