@@ -3,123 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Responsive Double Seam Inspection App</title>
+    <title>REC 7.2.12 Double Seam Inspection Report</title>
     <style>
         :root {
             --primary-color: #003366;
             --secondary-color: #3399ff;
+            --bg-light: #f4f8fc;
+            --border-color: #b3d1ff;
             --success-color: #2e7d32;
-            --danger-color: #c62828;
-            --warning-color: #ef6c00;
-            --bg-light: #f4f7fa;
-            --border-color: #b0d4ff;
+            --fail-color: #c62828;
+            --text-dark: #333333;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
             background-color: var(--bg-light);
+            color: var(--text-dark);
             margin: 0;
-            padding: 10px;
-            color: #333;
-        }
-
-        @media (min-width: 768px) {
-            body { padding: 20px; }
+            padding: 15px;
+            line-height: 1.5;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
-            background-color: #fff;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-
-        @media (min-width: 768px) {
-            .container { padding: 25px; }
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         h1 {
             color: var(--primary-color);
-            border-bottom: 3px solid var(--secondary-color);
-            padding-bottom: 10px;
-            margin-top: 0;
-            font-size: 20px;
-            text-transform: uppercase;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        @media (min-width: 768px) {
-            h1 {
-                font-size: 24px;
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-            }
-        }
-
-        .context-indicator {
-            font-size: 12px;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: bold;
-            color: white;
-            background-color: #7f8c8d;
             text-align: center;
-            align-self: flex-start;
+            font-size: 24px;
+            margin-bottom: 5px;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 10px;
         }
 
-        @media (min-width: 768px) {
-            .context-indicator { align-self: auto; }
-        }
-
-        .mode-selector {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 25px;
-        }
-
-        @media (min-width: 600px) {
-            .mode-selector { flex-direction: row; }
-        }
-
-        .mode-btn {
-            flex: 1;
-            padding: 12px;
-            font-size: 14px;
+        .doc-info {
+            text-align: center;
             font-weight: bold;
-            border: 2px solid var(--secondary-color);
-            border-radius: 8px;
-            cursor: pointer;
-            background: white;
-            color: var(--primary-color);
-            transition: all 0.3s ease;
-        }
-
-        .mode-btn.active {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        .meta-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-            background: #e6f0fa;
-            padding: 15px;
-            border-radius: 8px;
+            color: #555;
             margin-bottom: 25px;
-            border: 1px solid var(--border-color);
+            font-size: 14px;
         }
 
-        @media (min-width: 480px) { .meta-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (min-width: 900px) { .meta-grid { grid-template-columns: repeat(4, 1fr); } }
-        @media (min-width: 1200px) { .meta-grid { grid-template-columns: repeat(7, 1fr); } }
+        h2 {
+            color: var(--primary-color);
+            font-size: 18px;
+            border-left: 4px solid var(--secondary-color);
+            padding-left: 10px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
 
         .form-group {
             display: flex;
@@ -127,527 +79,445 @@
         }
 
         label {
-            font-size: 12px;
             font-weight: bold;
             color: var(--primary-color);
             margin-bottom: 5px;
+            font-size: 14px;
         }
 
         input, select, textarea {
-            padding: 12px;
-            border: 1px solid #ccc;
+            padding: 10px;
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             font-size: 15px;
             box-sizing: border-box;
-            width: 100%;
+            background-color: #fff;
         }
 
-        input[readonly] {
-            background-color: #eaeff5;
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(0,51,102,0.2);
+        }
+
+        .ag-input-container {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .ag-prefix {
+            background: #e6f0fa;
+            border: 1px solid var(--border-color);
+            padding: 10px;
             font-weight: bold;
-        }
-
-        .calibration-box {
+            color: var(--primary-color);
+            border-radius: 6px;
+            user-select: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 45px;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 13px;
+            width: 50px;
         }
-        .cal-pass { background-color: #e8f5e9; color: var(--success-color); border: 1px solid #a5d6a7; }
-        .cal-fail { background-color: #ffebee; color: var(--danger-color); border: 1px solid #ef9a9a; }
 
-        .stage-section {
-            margin-bottom: 35px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            overflow: hidden;
+        .hidden {
+            display: none !important;
+        }
+
+        /* Matrix Table Layout */
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 8px;
+            border: 1px solid var(--border-color);
             background: #fff;
         }
 
-        .stage-header {
-            background: var(--primary-color);
-            color: white;
-            padding: 12px 15px;
-            font-weight: bold;
-            font-size: 15px;
-            margin: 0;
-            text-transform: uppercase;
-        }
-
-        /* Responsive View Switchers */
-        .desktop-table-view {
-            display: none;
-        }
-
-        .mobile-cards-view {
+        .spec-label {
+            font-size: 11px;
+            color: #555;
             display: block;
-            padding: 10px;
+            font-weight: normal;
+            margin-top: 2px;
+            background: #eef4fa;
+            padding: 2px;
+            border-radius: 3px;
         }
 
-        @media (min-width: 1024px) {
-            .desktop-table-view { display: block; }
-            .mobile-cards-view { display: none; }
-        }
-
-        /* Desktop Table Rules */
-        .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; min-width: 1100px; }
-        th, td { border: 1px solid #ddd; padding: 8px 6px; }
-        th { background-color: #f8f9fa; color: #333; }
-        .can-span-header { background-color: #eaeaea; font-weight: bold; }
-        .point-subhead { background-color: #f1f1f1; font-weight: bold; width: 40px; }
-
-        /* Mobile Card Rules */
-        .mobile-can-card {
-            background: #fafafa;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            padding: 12px;
-        }
-        .card-can-title {
-            background: #eaeaea;
-            margin: -12px -12px 12px -12px;
-            padding: 8px 12px;
+        .can-header-row {
+            background-color: #e6f2ff;
             font-weight: bold;
             color: var(--primary-color);
-            border-top-left-radius: 7px;
-            border-top-right-radius: 7px;
+        }
+
+        .matrix-input {
+            width: 100%;
+            padding: 6px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
             font-size: 14px;
         }
-        .card-point-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            background: white;
-            padding: 10px;
-            border: 1px solid #eee;
-            border-radius: 6px;
-            margin-bottom: 10px;
-        }
-        .card-point-title {
-            grid-column: span 3;
+
+        .computed-field {
             font-weight: bold;
-            color: #555;
-            border-bottom: 1px dashed #ddd;
-            padding-bottom: 3px;
-            font-size: 13px;
+            background-color: #f0f4f8;
+            padding: 6px;
+            border-radius: 4px;
+            display: block;
         }
 
-        .status-cell {
+        .status-badge {
             font-weight: bold;
-            padding: 4px;
+            padding: 4px 8px;
             border-radius: 4px;
             text-transform: uppercase;
-            font-size: 11px;
+            font-size: 12px;
             display: inline-block;
-            margin-top: 5px;
         }
-        .status-accept { background-color: #c8e6c9; color: #256029; }
-        .status-reject { background-color: #ffcdd2; color: #c62828; }
 
-        .ai-diagnostic-panel {
-            background: #fff3e0;
-            border: 1px solid #ffe0b2;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 20px;
+        .status-pass {
+            background-color: #e8f5e9;
+            color: var(--success-color);
+            border: 1px solid #a5d6a7;
+        }
+
+        .status-fail {
+            background-color: #ffebee;
+            color: var(--fail-color);
+            border: 1px solid #ef9a9a;
+        }
+
+        /* Mobile View Cards Override */
+        .mobile-cards-container {
             display: none;
         }
-        .ai-diagnostic-panel h3 { margin-top: 0; color: #e65100; font-size: 15px; }
-        .ai-issues-list { margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6; }
 
-        .footer-controls {
-            margin-top: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            align-items: center;
-        }
-
-        @media (min-width: 768px) {
-            .footer-controls { flex-direction: row; justify-content: flex-end; }
-        }
-
-        .btn {
-            padding: 12px 28px;
-            font-size: 15px;
-            font-weight: bold;
+        .btn-submit {
+            background-color: var(--primary-color);
+            color: white;
             border: none;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
             border-radius: 6px;
             cursor: pointer;
             width: 100%;
+            margin-top: 30px;
+            transition: background 0.2s;
         }
 
-        @media (min-width: 768px) { .btn { width: auto; } }
-        .btn-submit { background-color: var(--success-color); color: white; }
-        .btn-pdf { background-color: var(--primary-color); color: white; }
-        .btn-pdf:disabled { background-color: #bdc3c7; cursor: not-allowed; }
-
-        .hidden { display: none !important; }
-        
-        .audit-footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 2px dashed #ccc;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-            font-size: 12px;
+        .btn-submit:hover {
+            background-color: #002244;
         }
-        @media (min-width: 768px) { .audit-footer { grid-template-columns: repeat(3, 1fr); } }
-        .audit-box { background: #fafafa; padding: 10px; border: 1px solid #e0e0e0; border-radius: 4px; }
+
+        /* Responsive Design Rules */
+        @media (max-width: 1024px) {
+            .grid-3, .grid-2 {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .table-responsive {
+                display: none;
+            }
+
+            .mobile-cards-container {
+                display: block;
+            }
+
+            .mobile-can-card {
+                background: #fff;
+                border: 2px solid var(--border-color);
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .mobile-can-card h3 {
+                margin-top: 0;
+                background: var(--primary-color);
+                color: white;
+                padding: 8px;
+                border-radius: 4px;
+                text-align: center;
+                font-size: 16px;
+            }
+
+            .mobile-point-section {
+                background: #f9fbfd;
+                border: 1px solid #d0e2f5;
+                padding: 10px;
+                border-radius: 6px;
+                margin-bottom: 12px;
+            }
+
+            .mobile-point-title {
+                font-weight: bold;
+                color: var(--primary-color);
+                border-bottom: 1px dashed var(--border-color);
+                margin-bottom: 8px;
+                font-size: 14px;
+            }
+
+            .mobile-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 6px;
+                font-size: 14px;
+            }
+
+            .mobile-row label {
+                margin-bottom: 0;
+                width: 45%;
+            }
+
+            .mobile-row .mobile-field-wrapper {
+                width: 50%;
+            }
+
+            .mobile-row input {
+                width: 100%;
+                padding: 6px;
+            }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>
-        <span>Double Seam Inspection (REC 7.2.12)</span>
-        <span id="contextHeader" class="context-indicator">PRODUCTION</span>
-    </h1>
+    <h1>Double Seam Inspection Report</h1>
+    <div class="doc-info">REC 7.2.12 &bull; Quality Management System</div>
 
-    <div class="mode-selector">
-        <button type="button" class="mode-btn active" id="btnReportMode" onclick="setAppMode('report')">Compliance Audit Mode</button>
-        <button type="button" class="mode-btn" id="btnQuickMode" onclick="setAppMode('quick')">Floor Quick Test Mode</button>
-    </div>
-
-    <form id="seamInspectionForm" oninput="calculateEngine()">
+    <form id="seamForm">
         
-        <div id="metadataBlock" class="meta-grid">
+        <h2>Personnel & Timeline</h2>
+        <div class="grid-3">
             <div class="form-group">
-                <label for="operatorName">User Identity</label>
-                <select id="operatorName" required>
-                    <option value="">Select...</option>
-                    <option value="Lungisa">Lungisa (Prod)</option>
-                    <option value="Nandi">Nandi (QA)</option>
-                    <option value="Technical Mode">Technical Team</option>
+                <label for="inspector">Inspector Name:</label>
+                <input type="text" id="inspector" required placeholder="Enter your full name">
+            </div>
+            <div class="form-group">
+                <label for="inspectionDate">Date:</label>
+                <input type="date" id="inspectionDate" required>
+            </div>
+            <div class="form-group">
+                <label for="inspectionType">Inspection Interval:</label>
+                <select id="inspectionType" required>
+                    <option value="" disabled selected>-- Select Interval --</option>
+                    <option value="Start up / During production">Start up / During production</option>
+                    <option value="After production">After production</option>
+                    <option value="Quick Test (No Save)">Quick Test (No Save)</option>
                 </select>
             </div>
+        </div>
+
+        <h2>Production & Batch Parameters</h2>
+        <div class="grid-3">
             <div class="form-group">
-                <label for="agCode">AG CODE</label>
-                <select id="agCode" onchange="autoPopulateProductSpecs()">
-                    <option value="">Select...</option>
-                    <option value="AG401">AG401</option>
-                    <option value="AG402">AG402</option>
-                    <option value="AG501">AG501</option>
+                <label for="agDigits">AG Job Code:</label>
+                <div class="ag-input-container">
+                    <span class="ag-prefix">AG</span>
+                    <input type="number" id="agDigits" inputmode="numeric" placeholder="123456" required oninput="if(this.value.length > 6) this.value = this.value.slice(0,6);">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="canSize">Can Size:</label>
+                <select id="canSize" required onchange="toggleCustomCanSize(this.value)">
+                    <option value="" disabled selected>-- Select Size --</option>
+                    <option value="73x111mm">73x111mm</option>
+                    <option value="73x119mm">73x119mm</option>
+                    <option value="99x119mm">99x119mm</option>
+                    <option value="Other">Other (Manual Input)</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label for="canSize">Can Size</label>
-                <input type="text" id="canSize" readonly placeholder="Auto">
-            </div>
-            <div class="form-group">
-                <label for="eviosysCans">Eviosys Cans</label>
-                <input type="text" id="eviosysCans" readonly placeholder="Auto">
-            </div>
-            <div class="form-group">
-                <label for="eviosysEnds">Eviosys Ends</label>
-                <input type="text" id="eviosysEnds" readonly placeholder="Auto">
-            </div>
-            <div class="form-group">
-                <label for="micrometerSerial">Micrometer S/N</label>
-                <input type="text" id="micrometerSerial" required placeholder="e.g., MIC-9928">
-            </div>
-            <div class="form-group">
-                <label for="micrometerCheck">Micrometer Check</label>
-                <input type="number" step="0.01" inputmode="decimal" id="micrometerCheck" required placeholder="Target 1.21">
-            </div>
-            <div class="form-group">
-                <label>Status</label>
-                <div id="calibrationStatus" class="calibration-box cal-fail">Unverified</div>
+            <div class="form-group hidden" id="customCanSizeGroup">
+                <label for="customCanSize">Specify Size (mm):</label>
+                <input type="text" id="customCanSize" placeholder="e.g., 52x73mm">
             </div>
         </div>
 
-        <div id="aiDiagnosticPanel" class="ai-diagnostic-panel">
-            <h3>⚠️ Built-In AI Mechanical Diagnostics Alert</h3>
-            <ul id="aiIssuesList" class="ai-issues-list"></ul>
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="palletCodeCans">Pallet Code (Cans):</label>
+                <input type="text" id="palletCodeCans" required placeholder="Enter can pallet batch code">
+            </div>
+            <div class="form-group">
+                <label for="palletCodeLids">Pallet Code (Lids):</label>
+                <input type="text" id="palletCodeLids" required placeholder="Enter lid pallet batch code">
+            </div>
         </div>
 
-        <div id="stagesContainer"></div>
+        <h2>Double Seam Evaluation Grid (2 Can Check)</h2>
+        
+        <div class="table-responsive">
+            <table id="matrixTable">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="width: 20%;">Measurement Line Parameter</th>
+                        <th colspan="3">CAN 1</th>
+                        <th colspan="3">CAN 2</th>
+                    </tr>
+                    <tr>
+                        <th style="width: 13%;">Pt 1 (12:00)</th>
+                        <th style="width: 13%;">Pt 2 (4:00)</th>
+                        <th style="width: 13%;">Pt 3 (8:00)</th>
+                        <th style="width: 13%;">Pt 1 (12:00)</th>
+                        <th style="width: 13%;">Pt 2 (4:00)</th>
+                        <th style="width: 13%;">Pt 3 (8:00)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Body Thickness (mm)</strong><span class="spec-label">Target Range: 0.15 - 0.25</span></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p1_bt" data-can="1" data-pt="1" data-field="bt" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p2_bt" data-can="1" data-pt="2" data-field="bt" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p3_bt" data-can="1" data-pt="3" data-field="bt" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p1_bt" data-can="2" data-pt="1" data-field="bt" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p2_bt" data-can="2" data-pt="2" data-field="bt" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p3_bt" data-can="2" data-pt="3" data-field="bt" inputmode="decimal"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cover Thickness (mm)</strong><span class="spec-label">Target Range: 0.15 - 0.25</span></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p1_ct" data-can="1" data-pt="1" data-field="ct" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p2_ct" data-can="1" data-pt="2" data-field="ct" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p3_ct" data-can="1" data-pt="3" data-field="ct" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p1_ct" data-can="2" data-pt="1" data-field="ct" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p2_ct" data-can="2" data-pt="2" data-field="ct" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p3_ct" data-can="2" data-pt="3" data-field="ct" inputmode="decimal"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Seam Thickness (mm)</strong><span class="spec-label">Target Range: 1.00 - 1.50</span></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p1_st" data-can="1" data-pt="1" data-field="st" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p2_st" data-can="1" data-pt="2" data-field="st" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p3_st" data-can="1" data-pt="3" data-field="st" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p1_st" data-can="2" data-pt="1" data-field="st" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p2_st" data-can="2" data-pt="2" data-field="st" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p3_st" data-can="2" data-pt="3" data-field="st" inputmode="decimal"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Seam Length (mm)</strong><span class="spec-label">Target Range: 2.50 - 3.20</span></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p1_sl" data-can="1" data-pt="1" data-field="sl" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p2_sl" data-can="1" data-pt="2" data-field="sl" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p3_sl" data-can="1" data-pt="3" data-field="sl" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p1_sl" data-can="2" data-pt="1" data-field="sl" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p2_sl" data-can="2" data-pt="2" data-field="sl" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p3_sl" data-can="2" data-pt="3" data-field="sl" inputmode="decimal"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Body Hook (mm)</strong><span class="spec-label">Target Range: 1.70 - 2.20</span></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p1_bh" data-can="1" data-pt="1" data-field="bh" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p2_bh" data-can="1" data-pt="2" data-field="bh" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p3_bh" data-can="1" data-pt="3" data-field="bh" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p1_bh" data-can="2" data-pt="1" data-field="bh" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p2_bh" data-can="2" data-pt="2" data-field="bh" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p3_bh" data-can="2" data-pt="3" data-field="bh" inputmode="decimal"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cover Hook (mm)</strong><span class="spec-label">Target Range: 1.70 - 2.20</span></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p1_ch" data-can="1" data-pt="1" data-field="ch" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p2_ch" data-can="1" data-pt="2" data-field="ch" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c1_p3_ch" data-can="1" data-pt="3" data-field="ch" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p1_ch" data-can="2" data-pt="1" data-field="ch" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p2_ch" data-can="2" data-pt="2" data-field="ch" inputmode="decimal"></td>
+                        <td><input type="number" step="0.01" class="matrix-input" id="c2_p3_ch" data-can="2" data-pt="3" data-field="ch" inputmode="decimal"></td>
+                    </tr>
 
-        <div class="footer-controls">
-            <span id="completionTracker" style="font-size: 13px; font-weight: bold; color: #555; text-align: center;"></span>
-            <button type="button" id="btnGenerateReport" class="btn btn-pdf" disabled onclick="triggerPDFExport()">Download PDF</button>
-            <button type="submit" id="btnSubmitForm" class="btn btn-submit">Submit to Server DB</button>
+                    <tr class="can-header-row"><td colspan="7">Automated System Calculations</td></tr>
+                    
+                    <tr>
+                        <td><strong>Actual Overlap (mm)</strong><span class="spec-label">Target Range: &ge; 1.00 mm</span></td>
+                        <td><span id="c1_p1_out_ao" class="computed-field">-</span></td>
+                        <td><span id="c1_p2_out_ao" class="computed-field">-</span></td>
+                        <td><span id="c1_p3_out_ao" class="computed-field">-</span></td>
+                        <td><span id="c2_p1_out_ao" class="computed-field">-</span></td>
+                        <td><span id="c2_p2_out_ao" class="computed-field">-</span></td>
+                        <td><span id="c2_p3_out_ao" class="computed-field">-</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Overlap %</strong><span class="spec-label">Target Range: &ge; 45%</span></td>
+                        <td><span id="c1_p1_out_op" class="computed-field">-</span></td>
+                        <td><span id="c1_p2_out_op" class="computed-field">-</span></td>
+                        <td><span id="c1_p3_out_op" class="computed-field">-</span></td>
+                        <td><span id="c2_p1_out_op" class="computed-field">-</span></td>
+                        <td><span id="c2_p2_out_op" class="computed-field">-</span></td>
+                        <td><span id="c2_p3_out_op" class="computed-field">-</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Body Hook Butting (BHB %)</strong><span class="spec-label">Target Range: &ge; 70%</span></td>
+                        <td><span id="c1_p1_out_bhb" class="computed-field">-</span></td>
+                        <td><span id="c1_p2_out_bhb" class="computed-field">-</span></td>
+                        <td><span id="c1_p3_out_bhb" class="computed-field">-</span></td>
+                        <td><span id="c2_p1_out_bhb" class="computed-field">-</span></td>
+                        <td><span id="c2_p2_out_bhb" class="computed-field">-</span></td>
+                        <td><span id="c2_p3_out_bhb" class="computed-field">-</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Free Space (mm)</strong><span class="spec-label">Target Range: 0.05 - 0.25 mm</span></td>
+                        <td><span id="c1_p1_out_fs" class="computed-field">-</span></td>
+                        <td><span id="c1_p2_out_fs" class="computed-field">-</span></td>
+                        <td><span id="c1_p3_out_fs" class="computed-field">-</span></td>
+                        <td><span id="c2_p1_out_fs" class="computed-field">-</span></td>
+                        <td><span id="c2_p2_out_fs" class="computed-field">-</span></td>
+                        <td><span id="c2_p3_out_fs" class="computed-field">-</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Point QA Decision</strong><span class="spec-label">Evaluation Rule Pass/Fail</span></td>
+                        <td><span id="c1_p1_out_status" class="status-badge">-</span></td>
+                        <td><span id="c1_p2_out_status" class="status-badge">-</span></td>
+                        <td><span id="c1_p3_out_status" class="status-badge">-</span></td>
+                        <td><span id="c2_p1_out_status" class="status-badge">-</span></td>
+                        <td><span id="c2_p2_out_status" class="status-badge">-</span></td>
+                        <td><span id="c2_p3_out_status" class="status-badge">-</span></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
-        <div class="audit-footer" id="auditFooter">
-            <div class="audit-box"><strong>Start-up Cycle:</strong><p id="auditStart">-</p></div>
-            <div class="audit-box"><strong>During Production:</strong><p id="auditDuring">-</p></div>
-            <div class="audit-box"><strong>After Production Sign-off:</strong><p id="auditAfter">-</p></div>
+        <div class="mobile-cards-container" id="mobileCards">
+            </div>
+
+        <h2>Observations & Non-Conformance Notes</h2>
+        <div class="form-group">
+            <textarea id="observations" rows="3" placeholder="Log any visual seam defects (e.g., droop, skid, v-seams, sharp seam) or structural observations here..."></textarea>
         </div>
+
+        <h2>Verification Signatures</h2>
+        <div class="grid-2" style="margin-top: 15px;">
+            <div class="form-group">
+                <label for="inspectedBySignature">Inspected By (Inspector Signature):</label>
+                <input type="text" id="inspectedBySignature" required placeholder="Type full name to digitally sign">
+            </div>
+            <div class="form-group">
+                <label for="verifiedBySignature">Verified By (Supervisor/Manager Signature):</label>
+                <input type="text" id="verifiedBySignature" required placeholder="Type verifier name to verify log">
+            </div>
+        </div>
+
+        <button type="submit" class="btn-submit">Submit & Export Inspection Report</button>
     </form>
 </div>
 
 <script>
-    const PRODUCT_REGISTRY = {
-        "AG401": { size: "711x310", canCode: "EVI-C-401A", endCode: "EVI-E-401A" },
-        "AG402": { size: "711x310", canCode: "EVI-C-402B", endCode: "EVI-E-402B" },
-        "AG501": { size: "815x415", canCode: "EVI-C-501X", endCode: "EVI-E-501X" }
-    };
-
-    const STAGE_CONFIGS = [
-        { id: "startup", label: "Start-Up Stage (Production Entry)" },
-        { id: "during", label: "During Production Stage (Regular Shift)" },
-        { id: "after", label: "After Production Stage (Post-Run)" }
-    ];
-
-    const METRICS = [
-        { id: "vacuum", label: "Vacuum Pressure (KPa)", def: -6, step: "1" },
-        { id: "seamLength", label: "Seam Length (mm)", def: "", step: "0.01" },
-        { id: "seamThickness", label: "Seam Thickness (mm)", def: "", step: "0.01" },
-        { id: "bodyHook", label: "Body Hook (mm)", def: "", step: "0.01" },
-        { id: "coverHook", label: "Cover Hook (mm)", def: "", step: "0.01" },
-        { id: "bodyThickness", label: "Plate Thickness Tb (mm)", def: 0.22, step: "0.01" },
-        { id: "coverThickness", label: "Plate Thickness Te (mm)", def: 0.22, step: "0.01" }
-    ];
-
-    const COMPUTED_METRICS = [
-        { id: "actOverlap", label: "Calc Actual Overlap (mm)" },
-        { id: "pctOverlap", label: "Calc Overlap %" },
-        { id: "pctBHB", label: "Calc B.H.B. %" },
-        { id: "freeSpace", label: "Calc Free Space (mm)" }
-    ];
-
-    let currentMode = "report";
-
-    document.addEventListener("DOMContentLoaded", () => {
-        buildDynamicLayouts();
-        setAppMode("report");
-        
-        document.getElementById("seamInspectionForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-            if(document.getElementById("calibrationStatus").classList.contains("cal-fail")) {
-                alert("HARD STOP: Micrometer verification failed. Submission locked.");
-                return;
-            }
-            alert("SUCCESS: Data recorded safely to system.");
-            this.reset();
-            calculateEngine();
-        });
-    });
-
-    function setAppMode(mode) {
-        currentMode = mode;
-        document.getElementById("metadataBlock").className = (mode === "quick") ? "meta-grid hidden" : "meta-grid";
-        document.getElementById("auditFooter").className = (mode === "quick") ? "audit-footer hidden" : "audit-footer";
-        document.getElementById("btnReportMode").className = (mode === "report") ? "mode-btn active" : "mode-btn";
-        document.getElementById("btnQuickMode").className = (mode === "quick") ? "mode-btn active" : "mode-btn";
-        document.getElementById("stage_after").className = (mode === "quick") ? "stage-section hidden" : "stage-section";
-        
-        document.getElementById("operatorName").required = (mode === "report");
-        document.getElementById("micrometerSerial").required = (mode === "report");
-        document.getElementById("micrometerCheck").required = (mode === "report");
-        calculateEngine();
-    }
-
-    function autoPopulateProductSpecs() {
-        const code = document.getElementById("agCode").value;
-        if(PRODUCT_REGISTRY[code]) {
-            document.getElementById("canSize").value = PRODUCT_REGISTRY[code].size;
-            document.getElementById("eviosysCans").value = PRODUCT_REGISTRY[code].canCode;
-            document.getElementById("eviosysEnds").value = PRODUCT_REGISTRY[code].endCode;
-        }
-    }
-
-    function buildDynamicLayouts() {
-        const container = document.getElementById("stagesContainer");
-        container.innerHTML = "";
-
-        STAGE_CONFIGS.forEach(stage => {
-            const section = document.createElement("div");
-            section.className = "stage-section";
-            section.id = `stage_${stage.id}`;
-
-            // Build Desktop Grid View Template
-            let desktopHTML = `<div class="desktop-table-view"><div class="table-responsive"><table><thead><tr><th rowspan="3" style="width:180px;">Parameter</th><th colspan="3" class="can-span-header">CAN 1</th><th colspan="3" class="can-span-header">CAN 2</th></tr><tr><th colspan="3" class="point-subhead">Points</th><th colspan="3" class="point-subhead">Points</th></tr><tr><th class="point-subhead">1</th><th class="point-subhead">2</th><th class="point-subhead">3</th><th class="point-subhead">1</th><th class="point-subhead">2</th><th class="point-subhead">3</th></tr></thead><tbody>`;
-            
-            METRICS.forEach(m => {
-                desktopHTML += `<tr><td style="text-align:left;font-weight:bold;background:#fafafa;">${m.label}</td>`;
-                for(let c=1; c<=2; c++) {
-                    for(let p=1; p<=3; p++) {
-                        desktopHTML += `<td><input type="number" step="${m.step}" inputmode="decimal" data-sync="${stage.id}_${m.id}_c${c}_p${p}" value="${m.def}" style="width:65px;text-align:center;"></td>`;
-                    }
-                }
-                desktopHTML += `</tr>`;
-            });
-
-            COMPUTED_METRICS.forEach(cm => {
-                desktopHTML += `<tr style="background:#fdfdfd;"><td style="text-align:left;color:var(--primary-color);padding-left:12px;">${cm.label}</td>`;
-                for(let c=1; c<=2; c++) {
-                    for(let p=1; p<=3; p++) {
-                        desktopHTML += `<td><span data-val="${stage.id}_${cm.id}_c${c}_p${p}" style="font-weight:bold;display:block;">-</span><span data-status="${stage.id}_${cm.id}_c${c}_p${p}" class="status-cell" style="display:none;"></span></td>`;
-                    }
-                }
-                desktopHTML += `</tr>`;
-            });
-            desktopHTML += `</tbody></table></div></div>`;
-
-            // Build Mobile Card Stack Layout Template
-            let mobileHTML = `<div class="mobile-cards-view">`;
-            for(let c=1; c<=2; c++) {
-                mobileHTML += `<div class="mobile-can-card"><div class="card-can-title">CAN 0${c} Measurements Matrix</div>`;
-                for(let p=1; p<=3; p++) {
-                    mobileHTML += `<div class="card-point-row"><div class="card-point-title">Location Point Details (Pt ${p})</div>`;
-                    METRICS.forEach(m => {
-                        mobileHTML += `<div class="form-group" style="grid-column: span 3;"><label>${m.label}</label><input type="number" step="${m.step}" inputmode="decimal" data-sync="${stage.id}_${m.id}_c${c}_p${p}" value="${m.def}"></div>`;
-                    });
-                    COMPUTED_METRICS.forEach(cm => {
-                        mobileHTML += `<div style="grid-column: span 3; background:#f9f9f9; padding:8px; border-radius:4px; margin-top:5px; display:flex; justify-content:space-between; align-items:center;"><strong>${cm.label}:</strong><div><span data-val="${stage.id}_${cm.id}_c${c}_p${p}">-</span> <span data-status="${stage.id}_${cm.id}_c${c}_p${p}" class="status-cell" style="display:none;"></span></div></div>`;
-                    });
-                    mobileHTML += `</div>`;
-                }
-                mobileHTML += `</div>`;
-            }
-            mobileHTML += `</div>`;
-
-            section.innerHTML = `<h2 class="stage-header">${stage.label}</h2>` + desktopHTML + mobileHTML;
-            container.appendChild(section);
-        });
-
-        // Mirror values dynamically across the viewport views so workers can change orientation midway smoothly
-        container.querySelectorAll('input').forEach(input => {
-            input.addEventListener('input', (e) => {
-                const targetKey = e.target.getAttribute('data-sync');
-                container.querySelectorAll(`[data-sync="${targetKey}"]`).forEach(el => { if(el !== e.target) el.value = e.target.value; });
-            });
-        });
-    }
-
-    function calculateEngine() {
-        const operator = document.getElementById("operatorName").value;
-        document.getElementById("contextHeader").innerText = (operator.toUpperCase().includes("QUALITY")) ? "QUALITY CONTROL" : "PRODUCTION WORKSPACE";
-        
-        if (currentMode === "report" && operator) {
-            document.getElementById("auditStart").innerText = `${operator} (Tracked Active)`;
-            document.getElementById("auditDuring").innerText = `${operator} (Tracked Active)`;
-            document.getElementById("auditAfter").innerText = `${operator} (Tracked Active)`;
-        }
-
-        const micCheckInput = document.getElementById("micrometerCheck").value;
-        const calStatusBox = document.getElementById("calibrationStatus");
-        let isCalibrated = false;
-
-        if(micCheckInput) {
-            const micValue = parseFloat(micCheckInput);
-            if (Math.abs(micValue - 1.21) <= 0.02) {
-                calStatusBox.className = "calibration-box cal-pass";
-                calStatusBox.innerText = `OK (${micValue.toFixed(2)}mm)`;
-                isCalibrated = true;
-            } else {
-                calStatusBox.className = "calibration-box cal-fail";
-                calStatusBox.innerText = `REJECT HARD LOCK`;
-            }
-        } else {
-            calStatusBox.className = "calibration-box cal-fail";
-            calStatusBox.innerText = "Unverified";
-        }
-
-        let activeTroubleshootAlerts = new Set();
-        let filledCansCount = 0;
-
-        STAGE_CONFIGS.forEach(stage => {
-            if (currentMode === "quick" && stage.id === "after") return;
-            let stageCansFinished = 0;
-
-            for (let c = 1; c <= 2; c++) {
-                let canHasData = false;
-                for (let p = 1; p <= 3; p++) {
-                    const inputs = {};
-                    METRICS.forEach(m => {
-                        const inputsFound = document.querySelectorAll(`[data-sync="${stage.id}_${m.id}_c${c}_p${p}"]`);
-                        inputs[m.id] = inputsFound.length ? parseFloat(inputsFound[0].value) : NaN;
-                    });
-
-                    if(!isNaN(inputs.seamLength) || !isNaN(inputs.seamThickness) || !isNaN(inputs.bodyHook) || !isNaN(inputs.coverHook)) {
-                        canHasData = true;
-                    }
-
-                    if (Object.values(inputs).every(v => !isNaN(v))) {
-                        const actualOverlap = (inputs.bodyHook + inputs.coverHook + inputs.coverThickness) - inputs.seamLength;
-                        const overlapPercent = (actualOverlap / inputs.seamLength) * 100;
-                        const bhbPercent = ((inputs.bodyHook - (1.1 * inputs.bodyThickness)) / (inputs.seamLength - (1.1 * ((2 * inputs.coverThickness) + inputs.bodyThickness)))) * 100;
-                        const freeSpace = inputs.seamThickness - ((2 * inputs.bodyThickness) + (3 * inputs.coverThickness));
-
-                        updateOutputUI(stage.id, "actOverlap", c, p, actualOverlap, 2, "mm");
-                        updateOutputUI(stage.id, "pctOverlap", c, p, overlapPercent, 1, "%");
-                        updateOutputUI(stage.id, "pctBHB", c, p, bhbPercent, 1, "%");
-                        updateOutputUI(stage.id, "freeSpace", c, p, freeSpace, 2, "mm");
-
-                        let pass = true;
-                        if (inputs.vacuum <= -5) pass = false;
-                        if (inputs.coverHook < 1.70 || inputs.coverHook > 2.10) { pass = false; if(inputs.coverHook < 1.70) activeTroubleshootAlerts.add("Cover Hook short: Check roller setup tightness."); }
-                        if (inputs.bodyHook < 1.80 || inputs.bodyHook > 2.15) { pass = false; if(inputs.bodyHook < 1.80) activeTroubleshootAlerts.add("Body Hook short: Check lower lifter alignment."); }
-                        if (actualOverlap < 1.0 || overlapPercent < 45) pass = false;
-
-                        if (stage.id !== "after") {
-                            if (inputs.seamLength < 2.65 || inputs.seamLength > 2.95) pass = false;
-                            if (inputs.seamThickness < 1.10 || inputs.seamThickness > 1.24) pass = false;
-                        } else {
-                            if (inputs.seamLength < 2.65 || inputs.seamLength > 3.05) pass = false;
-                            if (inputs.seamThickness < 1.10 || inputs.seamThickness > 1.20) pass = false;
-                        }
-
-                        setComplianceStatus(stage.id, c, p, pass);
-                    } else {
-                        clearOutputUI(stage.id, c, p);
-                    }
-                }
-                if (canHasData) stageCansFinished++;
-            }
-            filledCansCount += stageCansFinished;
-        });
-
-        const diagnosticBox = document.getElementById("aiDiagnosticPanel");
-        const listContainer = document.getElementById("aiIssuesList");
-        if(activeTroubleshootAlerts.size > 0) {
-            listContainer.innerHTML = "";
-            activeTroubleshootAlerts.forEach(issue => { const li = document.createElement("li"); li.innerText = issue; listContainer.appendChild(li); });
-            diagnosticBox.style.display = "block";
-        } else {
-            diagnosticBox.style.display = "none";
-        }
-
-        const generatePdfBtn = document.getElementById("btnGenerateReport");
-        const trackerText = document.getElementById("completionTracker");
-
-        if (currentMode === "report") {
-            trackerText.innerText = `Data Progress: ${filledCansCount} / 6 Cans Completed`;
-            generatePdfBtn.disabled = !(filledCansCount >= 6 && isCalibrated);
-        } else {
-            trackerText.innerText = "Floor Testing Ad-Hoc Diagnostics Running (Data Logs Offline)";
-            generatePdfBtn.disabled = true;
-        }
-    }
-
-    function updateOutputUI(stage, field, can, pt, val, decimals, unit) {
-        document.querySelectorAll(`[data-val="${stage}_${field}_c${can}_p${pt}"]`).forEach(el => {
-            el.innerText = `${val.toFixed(decimals)} ${unit}`;
-        });
-    }
-
-    function clearOutputUI(stage, can, pt) {
-        COMPUTED_METRICS.forEach(cm => {
-            document.querySelectorAll(`[data-val="${stage}_${cm.id}_c${can}_p${pt}"]`).forEach(el => el.innerText = "-");
-            document.querySelectorAll(`[data-status="${stage}_${cm.id}_c${can}_p${pt}"]`).forEach(el => el.style.display = "none");
-        });
-    }
-
-    function setComplianceStatus(stage, can, pt, pass) {
-        COMPUTED_METRICS.forEach(cm => {
-            document.querySelectorAll(`[data-status="${stage}_${cm.id}_c${can}_p${pt}"]`).forEach(el => {
-                el.style.display = "inline-block";
-                if (pass) { el.className = "status-cell status-accept"; el.innerText = "Accept"; }
-                else { el.className = "status-cell status-reject"; el.innerText = "Reject"; }
-            });
-        });
-    }
-
-    function triggerPDFExport() { window.print(); }
-</script>
-</body>
-</html>
+    // System Constant Specifications Matrix
+    const SPECS = {
+        bt: { min: 0.15, max: 0.25 },
+        ct: { min: 0.15
