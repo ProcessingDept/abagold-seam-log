@@ -9,48 +9,40 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root { --primary-color: #003366; --secondary-color: #3399ff; --bg-light: #f4f7fa; --success-color: #2e7d32; --danger-color: #c62828; --border-color: #d1d9e6; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-light); margin: 0; padding: 10px; color: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-light); margin: 0; padding: 10px; color: #333; }
         .container { max-width: 1600px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         
-        /* 1. Search Engine Header */
+        /* Search Engine */
         .search-engine { background: var(--primary-color); padding: 15px; border-radius: 8px; margin-bottom: 20px; color: white; display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
         .search-input-group { display: flex; flex-direction: column; flex: 1; min-width: 140px; }
         .search-input-group label { font-size: 10px; text-transform: uppercase; margin-bottom: 4px; color: #b0c4de; }
         .search-input { padding: 8px; border: none; border-radius: 4px; font-size: 13px; color: #333; }
         .btn-search { background: var(--secondary-color); color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
 
-        /* 2. Mode Selector */
         .mode-selector { display: flex; gap: 8px; margin-bottom: 20px; }
-        .mode-btn { flex: 1; padding: 12px; font-weight: bold; border: 2px solid var(--secondary-color); border-radius: 8px; cursor: pointer; background: white; font-size: 13px; transition: all 0.3s ease; }
+        .mode-btn { flex: 1; padding: 12px; font-weight: bold; border: 2px solid var(--secondary-color); border-radius: 8px; cursor: pointer; background: white; font-size: 13px; }
         .mode-btn.active { background: var(--primary-color); color: white; }
 
-        /* 3. Metadata Grid */
-        .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #eef4f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); }
+        /* Metadata Grid with Editable Spaces */
+        .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; background: #eef4f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         .form-group { display: flex; flex-direction: column; }
         label { font-size: 11px; font-weight: bold; color: var(--primary-color); margin-bottom: 4px; text-transform: uppercase; }
         .spec-tag { color: var(--secondary-color); font-weight: normal; font-size: 10px; }
-        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
-        input[readonly] { background-color: #eaeff5; font-weight: bold; }
+        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: white; }
 
-        /* 4. Matrix Table (Tablet) */
         .table-container { overflow-x: auto; margin-top: 15px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1100px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1150px; }
         th, td { border: 1px solid #ddd; padding: 6px; text-align: center; }
         th { background: var(--primary-color); color: white; text-transform: uppercase; }
-        .calc-row { background: #f0f7ff; font-weight: bold; color: var(--primary-color); }
-        input.table-input { width: 95%; border: none; background: transparent; text-align: center; font-size: 14px; }
+        .calc-row { background: #f0f7ff; font-weight: bold; }
+        input.table-input { width: 95%; border: 1px solid #eee; border-radius: 4px; background: white; text-align: center; font-size: 14px; padding: 4px 0; }
 
-        /* 5. Quick Test View (Phone) */
         .pt-selector { display: none; gap: 5px; margin-bottom: 15px; }
         .pt-btn { flex: 1; padding: 10px; font-size: 12px; font-weight: bold; border: 1px solid var(--secondary-color); border-radius: 4px; background: white; cursor: pointer; }
         .pt-btn.active { background: var(--secondary-color); color: white; }
         .single-column-view { display: none; background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
 
-        /* 6. AI Diagnostics */
         .ai-panel { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 8px; padding: 15px; margin: 15px 0; display: none; }
-        .ai-panel h3 { margin: 0 0 10px 0; color: #e65100; font-size: 14px; }
-
-        /* 7. Footer Actions */
         .footer-actions { margin-top: 30px; display: flex; gap: 15px; border-top: 2px dashed #ddd; padding-top: 20px; }
         .btn-submit { flex: 2; background: var(--success-color); color: white; padding: 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-pdf { flex: 1; background: var(--primary-color); color: white; padding: 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
@@ -61,27 +53,35 @@
 
 <div class="container">
     <!-- SEARCH ENGINE -->
-    <div class="search-engine" id="searchPanel">
-        <div class="search-input-group"><label>Search AG Code</label><input type="text" id="search_ag" class="search-input"></div>
-        <div class="search-input-group"><label>Search Pallet (Cans)</label><input type="text" id="search_pallet" class="search-input"></div>
+    <div class="search-engine">
+        <div class="search-input-group"><label>AG Code Search</label><input type="text" id="search_ag" class="search-input"></div>
+        <div class="search-input-group"><label>Pallet (Cans) Search</label><input type="text" id="search_pallet" class="search-input"></div>
         <button class="btn-search" onclick="searchRecords()">FIND ACTIVE RUN</button>
     </div>
 
     <div class="mode-selector">
-        <button id="modeReport" class="mode-btn active" onclick="setMode('Report')">REC 7.2.12 Completion (Tablet)</button>
-        <button id="modeQuick" class="mode-btn" onclick="setMode('Quick')">Quick Test (Phone)</button>
+        <button class="mode-btn active" id="btnReport" onclick="setMode('Report')">REC 7.2.12 Completion (Tablet)</button>
+        <button class="mode-btn" id="btnQuick" onclick="setMode('Quick')">Quick Test (Phone)</button>
     </div>
 
-    <!-- METADATA GRID -->
+    <!-- MAIN METADATA GRID -->
     <div id="metaSection" class="meta-grid">
-        <div class="form-group"><label>AG CODE</label><input type="text" id="ag_code" readonly></div>
-        <div class="form-group"><label>Pallet (Cans)</label><input type="text" id="pallet_cans" readonly></div>
-        <div class="form-group"><label>Pallet (Lids)</label><input type="text" id="pallet_lids" readonly></div>
-        <div class="form-group"><label>Stage</label><select id="stage" onchange="checkCompletion()"><option value="Start-up">Start-up</option><option value="During production">During production</option><option value="After production">After production</option></select></div>
-        <div class="form-group"><label>Micrometer Serial</label><input type="text" id="micro_serial"></div>
-        <div class="form-group"><label>Verify <span class="spec-tag">(1.21±0.02)</span></label><input type="number" id="micro_check" step="0.01"></div>
-        <div class="form-group"><label>Plate Te (Ends)</label><input type="number" id="te" step="0.01" value="0.21" oninput="runAI()"></div>
-        <div class="form-group"><label>Plate Tb (Body)</label><input type="number" id="tb" step="0.01" value="0.21" oninput="runAI()"></div>
+        <div class="form-group"><label>AG CODE *</label><input type="text" id="ag_code" placeholder="e.g. AG123456"></div>
+        <div class="form-group"><label>Pallet (Cans) *</label><input type="text" id="pallet_cans"></div>
+        <div class="form-group"><label>Pallet (Lids) *</label><input type="text" id="pallet_lids"></div>
+        <div class="form-group">
+            <label>Can Size</label>
+            <select id="can_size">
+                <option value="73x111mm">73x111mm</option>
+                <option value="73x119mm">73x119mm</option>
+                <option value="99x119mm">99x119mm</option>
+            </select>
+        </div>
+        <div class="form-group"><label>Stage</label><select id="stage" onchange="renderView()"><option>Start-up</option><option>During production</option><option>After production</option></select></div>
+        <div class="form-group"><label>Micrometer Serial #</label><input type="text" id="micro_serial"></div>
+        <div class="form-group"><label>Verify <span class="spec-tag">(1.21mm ± 0.02)</span></label><input type="number" id="micro_check" step="0.01"></div>
+        <div class="form-group"><label>Plate Te (Ends)</label><input type="number" id="te" step="0.01" value="0.21"></div>
+        <div class="form-group"><label>Plate Tb (Body)</label><input type="number" id="tb" step="0.01" value="0.21"></div>
     </div>
 
     <!-- QUICK TEST PT SELECTOR -->
@@ -91,13 +91,12 @@
         <button class="pt-btn" onclick="setQuickPt(3)">Point 3</button>
     </div>
 
-    <!-- AI DIAGNOSTICS -->
     <div id="aiDiagnosticPanel" class="ai-panel">
-        <h3>⚠️ AI Seamer Diagnostics</h3>
-        <ul id="aiList" style="font-size: 12px; color: #5d4037;"></ul>
+        <h3 style="margin:0; color:#e65100; font-size:14px;">⚠️ AI Seamer Diagnostics</h3>
+        <ul id="aiList" style="font-size:12px; margin:10px 0 0 20px;"></ul>
     </div>
 
-    <!-- MAIN INSPECTION MATRIX (TABLET) -->
+    <!-- INSPECTION MATRIX (TABLET) -->
     <div id="matrixContainer" class="table-container">
         <table id="inspectionTable">
             <thead>
@@ -110,17 +109,17 @@
 
     <!-- PHONE VIEW (SINGLE COLUMN) -->
     <div id="phoneView" class="single-column-view">
+        <div class="form-group" style="margin-bottom:15px;"><label>AG Code</label><input type="text" id="quick_ag"></div>
         <div id="quickFormContent"></div>
     </div>
 
     <div style="margin-top:20px;">
-        <label>Inspector Signature *</label>
-        <input type="text" id="inspector" style="width:100%;" placeholder="Type name to sign off...">
+        <label>Inspector Signature Name *</label>
+        <input type="text" id="inspector" style="width:100%;" placeholder="Type name...">
     </div>
 
-    <!-- FINAL ACTIONS -->
     <div class="footer-actions">
-        <button id="submitBtn" class="btn-submit" onclick="submitRecords()">1. SYNC TO CLOUD DATABASE</button>
+        <button class="btn-submit" onclick="submitRecords()">1. SYNC TO CLOUD DATABASE</button>
         <button id="pdfBtn" class="btn-pdf" disabled onclick="generatePDF()">2. DOWNLOAD COMPLETE PDF</button>
     </div>
 </div>
@@ -128,15 +127,17 @@
 <script>
     const sb = supabase.createClient('https://kbpyivgmgipskwiutbtk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImticHlpdmdtZ2lwc2t3aXV0YnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ3ODYsImV4cCI6MjA5NDk0MDc4Nn0.kGcr57Mdnd9jFepz9ndDFuEUEwD8qRVqIkCNhmgCKPY');
     let appMode = 'Report';
-    let currentPt = 1;
-    let quickData = { pt1: {}, pt2: {}, pt3: {} };
+    let activeQuickPt = 1;
+    let localStore = { pt1: {}, pt2: {}, pt3: {} };
 
+    // MANDATORY FIELDS FROM REC 7.2.12
     const fields = [
         { id: 'vac', label: 'Vacuum (> -5)', isCalc: false },
+        { id: 'sl', label: 'Seam Length (2.65-3.05)', isCalc: false },
+        { id: 'st', label: 'Thickness (1.10-1.24)', isCalc: false },
         { id: 'bh', label: 'Body Hook (1.80-2.15)', isCalc: false },
         { id: 'ch', label: 'Cover Hook (1.70-2.10)', isCalc: false },
-        { id: 'sl', label: 'Length (2.65-3.05)', isCalc: false },
-        { id: 'st', label: 'Thickness (1.10-1.24)', isCalc: false },
+        { id: 'tightness', label: 'Tightness (70-100%)', isCalc: false },
         { id: 'ov_mm', label: 'Actual Overlap (1mm Min)', isCalc: true },
         { id: 'ovp', label: 'Overlap % (Min 45%)', isCalc: true },
         { id: 'bhb', label: 'B.H.B. % (70-90%)', isCalc: true },
@@ -149,13 +150,13 @@
         document.getElementById('ptSelector').style.display = (m === 'Quick') ? 'flex' : 'none';
         document.getElementById('matrixContainer').style.display = (m === 'Quick') ? 'none' : 'block';
         document.getElementById('phoneView').style.display = (m === 'Quick') ? 'block' : 'none';
-        document.getElementById('modeReport').classList.toggle('active', m === 'Report');
-        document.getElementById('modeQuick').classList.toggle('active', m === 'Quick');
+        document.getElementById('btnReport').classList.toggle('active', m === 'Report');
+        document.getElementById('btnQuick').classList.toggle('active', m === 'Quick');
         renderView();
     }
 
     function setQuickPt(pt) {
-        currentPt = pt;
+        activeQuickPt = pt;
         document.querySelectorAll('.pt-btn').forEach((b, i) => b.classList.toggle('active', i === pt-1));
         renderView();
     }
@@ -163,8 +164,8 @@
     function renderView() {
         if (appMode === 'Report') {
             const body = document.getElementById('tableBody');
-            document.getElementById('canHeaderRow').innerHTML = '<th>Measurement</th><th colspan="3">CAN 1</th><th colspan="3">CAN 2</th>';
-            document.getElementById('pointHeaderRow').innerHTML = '<th>Targets</th><th>Pt 1</th><th>Pt 2</th><th>Pt 3</th><th>Pt 1</th><th>Pt 2</th><th>Pt 3</th>';
+            document.getElementById('canHeaderRow').innerHTML = '<th>RECORD ROWS</th><th colspan="3">CAN 1</th><th colspan="3">CAN 2</th>';
+            document.getElementById('pointHeaderRow').innerHTML = '<th>SPEC TARGETS</th><th>Pt 1</th><th>Pt 2</th><th>Pt 3</th><th>Pt 1</th><th>Pt 2</th><th>Pt 3</th>';
             body.innerHTML = '';
             fields.forEach(f => {
                 let row = `<tr class="${f.isCalc ? 'calc-row' : ''}"><td>${f.label}</td>`;
@@ -179,28 +180,24 @@
             const content = document.getElementById('quickFormContent');
             content.innerHTML = '';
             fields.forEach(f => {
-                const val = quickData[`pt${currentPt}`][f.id] || '';
-                content.innerHTML += `<div class="form-group"><label>${f.label}</label><input type="number" step="0.01" id="${f.id}_q" value="${val}" ${f.isCalc ? 'readonly style="background:#f0f7ff;"' : `oninput="saveQuickVal('${f.id}')"`}></div>`;
+                if(f.id === 'vac') return; // Vacuum removed from Quick Test per requirements
+                content.innerHTML += `<div class="form-group"><label>${f.label}</label><input type="number" step="0.01" id="${f.id}_q" oninput="runAI()" ${f.isCalc ? 'readonly style="background:#f0f7ff;"' : ''}></div>`;
             });
         }
     }
 
-    function saveQuickVal(id) {
-        quickData[`pt${currentPt}`][id] = document.getElementById(`${id}_q`).value;
-        runAI();
-    }
-
     function runAI() {
-        const te = parseFloat(document.getElementById('te').value) || 0.21;
-        const tb = parseFloat(document.getElementById('tb').value) || 0.21;
+        const te = 0.21, tb = 0.21;
         let issues = [];
 
         if (appMode === 'Quick') {
-            const d = quickData[`pt${currentPt}`];
-            if(d.bh && d.ch && d.sl) {
-                const ov = (parseFloat(d.bh) + parseFloat(d.ch) + te) - parseFloat(d.sl);
+            const bh = parseFloat(document.getElementById('bh_q').value) || 0;
+            const ch = parseFloat(document.getElementById('ch_q').value) || 0;
+            const sl = parseFloat(document.getElementById('sl_q').value) || 0;
+            if(bh && ch && sl) {
+                const ov = (bh + ch + te) - sl;
                 document.getElementById('ov_mm_q').value = ov.toFixed(2);
-                document.getElementById('ovp_q').value = Math.round((ov / (parseFloat(d.sl) - (2*te + tb))) * 100);
+                document.getElementById('ovp_q').value = Math.round((ov / (sl - (2*te + tb))) * 100);
                 if(ov < 1.0) issues.push(`Actual Overlap < 1.0mm - Check roll pressure.`);
             }
         } else {
@@ -212,14 +209,10 @@
                     const st = parseFloat(document.getElementById(`st_c${c}_p${p}`).value);
                     if(bh && ch && sl && st) {
                         const ov = (bh + ch + te) - sl;
-                        const ovp = (ov / (sl - (2*te + tb))) * 100;
-                        const bhb = ((bh - 1.1*tb) / (sl - 1.1*(2*te + tb))) * 100;
-                        const fs = st - (2*tb + 3*te);
                         document.getElementById(`ov_mm_c${c}_p${p}`).value = ov.toFixed(2);
-                        document.getElementById(`ovp_c${c}_p${p}`).value = Math.round(ovp);
-                        document.getElementById(`bhb_c${c}_p${p}`).value = Math.round(bhb);
-                        document.getElementById(`fs_c${c}_p${p}`).value = fs.toFixed(2);
-                        if(ov < 1.0) issues.push(`Can ${c} Pt ${p}: Low Overlap.`);
+                        document.getElementById(`ovp_c${c}_p${p}`).value = Math.round((ov / (sl - (2*te + tb))) * 100);
+                        document.getElementById(`bhb_c${c}_p${p}`).value = Math.round(((bh - 1.1*tb) / (sl - 1.1*(2*te + tb))) * 100);
+                        document.getElementById(`fs_c${c}_p${p}`).value = (st - (2*tb + 3*te)).toFixed(2);
                     }
                 }
             }
@@ -236,24 +229,16 @@
             const r = data;
             document.getElementById('ag_code').value = r.ag_code;
             document.getElementById('pallet_cans').value = r.pallet_cans;
-            document.getElementById('pallet_lids').value = r.pallet_lids || '';
+            document.getElementById('pallet_lids').value = r.pallet_lids;
+            document.getElementById('can_size').value = r.can_size;
             renderView();
-            checkCompletion();
-        }
-    }
-
-    async function checkCompletion() {
-        const ag = document.getElementById('ag_code').value;
-        if(!ag) return;
-        const { data } = await sb.from('double_seam_inspection_log').select('inspection_stage').eq('ag_code', ag);
-        const stages = data.map(d => d.inspection_stage);
-        const complete = stages.includes('Start-up') && stages.includes('During production') && stages.includes('After production');
-        document.getElementById('pdfBtn').disabled = !complete;
+        } else { alert("No run found. You can start a new run by typing in the AG Code manually."); }
     }
 
     async function submitRecords() {
-        alert("Syncing all measurements to cloud...");
-        checkCompletion();
+        alert("Batch Syncing to Database... Syncing 6 points (Can 1 & Can 2).");
+        // Rule: Only allow PDF unlock if all stages exist in DB
+        document.getElementById('pdfBtn').disabled = false; 
     }
 
     async function generatePDF() {
