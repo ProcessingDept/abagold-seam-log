@@ -6,208 +6,232 @@
     <title>Double Seam Inspection Log | REC 7.2.12</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --primary-color: #003366;
-            --secondary-color: #3399ff;
-            --bg-light: #f4f7fa;
-            --success-color: #2e7d32;
-            --danger-color: #c62828;
-            --border-color: #d1d9e6;
-        }
+        :root { --primary-color: #003366; --secondary-color: #3399ff; --bg-light: #f4f7fa; --success-color: #2e7d32; --danger-color: #c62828; --border-color: #d1d9e6; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-light); margin: 0; padding: 10px; color: #333; }
+        .container { max-width: 1500px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        /* Search Engine Header Styling */
+        .search-engine { background: var(--primary-color); padding: 15px; border-radius: 8px; margin-bottom: 20px; color: white; display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+        .search-input-group { display: flex; flex-direction: column; flex: 1; min-width: 150px; }
+        .search-input-group label { font-size: 10px; text-transform: uppercase; margin-bottom: 4px; color: #b0c4de; }
+        .search-input { padding: 8px; border: none; border-radius: 4px; font-size: 13px; }
+        .btn-search { background: var(--secondary-color); color: white; border: none; padding: 8px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        
+        .results-dropdown { width: 100%; background: white; color: #333; border-radius: 4px; margin-top: 5px; max-height: 150px; overflow-y: auto; display: none; border: 1px solid #ccc; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .result-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 12px; }
+        .result-item:hover { background: #f0f7ff; }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-light); margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 1000px; margin: 0 auto; background-color: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        
-        h1 { color: var(--primary-color); border-bottom: 3px solid var(--secondary-color); padding-bottom: 10px; margin-top: 0; font-size: 22px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
-        
-        .mode-selector { display: flex; gap: 15px; margin-bottom: 25px; }
-        .mode-btn { flex: 1; padding: 12px; font-size: 14px; font-weight: bold; border: 2px solid var(--secondary-color); border-radius: 8px; cursor: pointer; background: white; color: var(--primary-color); transition: all 0.3s ease; }
-        .mode-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        h1 { color: var(--primary-color); border-bottom: 3px solid var(--secondary-color); padding-bottom: 10px; font-size: 18px; text-transform: uppercase; }
+        .mode-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        .mode-btn { flex: 1; padding: 12px; font-weight: bold; border: 2px solid var(--secondary-color); border-radius: 8px; cursor: pointer; background: white; transition: 0.3s; }
+        .mode-btn.active { background: var(--primary-color); color: white; }
 
-        .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: #eef4f9; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid var(--border-color); }
-        
+        .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #eef4f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         .form-group { display: flex; flex-direction: column; }
-        label { font-size: 12px; font-weight: bold; color: var(--primary-color); margin-bottom: 5px; text-transform: uppercase; }
-        .spec-tag { color: var(--secondary-color); font-weight: normal; margin-left: 4px; text-transform: none; }
+        label { font-size: 11px; font-weight: bold; color: var(--primary-color); margin-bottom: 4px; text-transform: uppercase; }
+        .spec-tag { color: var(--secondary-color); font-weight: normal; font-size: 10px; }
         
-        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
-        input:focus { border-color: var(--secondary-color); outline: none; box-shadow: 0 0 5px rgba(51,153,255,0.2); }
+        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+        input[readonly] { background-color: #eaeff5; font-weight: bold; }
 
-        .calibration-box { padding: 10px; border-radius: 6px; font-weight: bold; text-align: center; font-size: 12px; border: 1px solid #ddd; margin-top: 22px; }
-        .cal-pass { background: #e8f5e9; color: var(--success-color); border-color: #a5d6a7; }
-        .cal-fail { background: #ffebee; color: var(--danger-color); border-color: #ef9a9a; }
+        .table-container { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1100px; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: center; }
+        th { background: var(--primary-color); color: white; text-transform: uppercase; }
+        .can-header { background: #eaeaea; color: #333; font-weight: bold; }
+        .calc-row { background: #f8f9fa; font-weight: bold; color: var(--primary-color); }
+        input.table-input { width: 90%; border: none; background: transparent; text-align: center; font-size: 13px; }
 
-        .inspection-card { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; margin-top: 20px; }
-        .card-header { background: var(--primary-color); color: white; padding: 12px 20px; font-weight: bold; font-size: 14px; text-transform: uppercase; }
-        .card-body { padding: 20px; }
+        .ai-panel { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 8px; padding: 15px; margin: 20px 0; display: none; }
+        .ai-panel h3 { margin: 0 0 10px 0; color: #e65100; font-size: 14px; }
 
-        .calc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-top: 20px; }
-        .calc-item { display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .calc-val { font-size: 20px; font-weight: bold; color: var(--primary-color); margin-top: 5px; }
-
-        .banner { padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; display: none; }
-        .approved { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; display: block; }
+        .banner { padding: 12px; border-radius: 6px; text-align: center; font-weight: bold; margin-bottom: 15px; display: none; }
+        .approved { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; display: block; }
         .pending { background: #fff3cd; color: #856404; display: block; }
-
-        .btn-submit { background-color: var(--success-color); color: white; padding: 15px 30px; border: none; border-radius: 6px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 20px; transition: background 0.2s; }
-        .btn-submit:hover { background-color: #1b5e20; }
-        
-        .hidden { display: none !important; }
+        .btn-submit { background: var(--success-color); color: white; padding: 15px; border: none; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>REC 7.2.12 INSPECTION <span id="workspaceTitle" style="font-size: 12px; opacity: 0.7;">WORKSPACE</span></h1>
+    <!-- SEARCH ENGINE ENGINE -->
+    <div class="search-engine">
+        <div class="search-input-group">
+            <label>Search AG Code</label>
+            <input type="text" id="search_ag" class="search-input" placeholder="e.g. AG401">
+        </div>
+        <div class="search-input-group">
+            <label>Search Pallet #</label>
+            <input type="text" id="search_pallet" class="search-input" placeholder="e.g. P123">
+        </div>
+        <button class="btn-search" onclick="searchRecords()">FIND RECORDS</button>
+        <div id="searchResults" class="results-dropdown"></div>
+    </div>
 
+    <h1>REC 7.2.12 WORKSPACE</h1>
     <div id="approvalBanner" class="banner"></div>
 
     <div class="mode-selector">
-        <button id="modeReport" class="mode-btn active" onclick="setMode('Report')">REC 7.2.12 Completion</button>
+        <button id="modeReport" class="mode-btn active" onclick="setMode('Report')">Official Report (2 Cans)</button>
         <button id="modeQuick" class="mode-btn" onclick="setMode('Quick')">Quick Test Mode</button>
     </div>
 
-    <!-- Metadata Grid -->
     <div id="metaSection" class="meta-grid">
-        <div class="form-group">
-            <label>AG CODE</label>
-            <input type="text" id="ag_code" oninput="lookupAndCheck()">
-            <div id="autoPopInfo" style="font-size: 11px; color: var(--success-color); margin-top: 5px; font-weight: bold;"></div>
-        </div>
-        <div class="form-group">
-            <label>Department</label>
-            <select id="department">
-                <option value="Production">Production</option>
-                <option value="Quality">Quality</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Inspection Stage</label>
-            <select id="stage" onchange="checkApproval()">
-                <option value="Start-up">Start-up</option>
-                <option value="During production">During production</option>
-                <option value="After production">After production</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Micrometer Serial</label>
-            <input type="text" id="micro_serial">
-        </div>
-        <div class="form-group">
-            <label>Verification Check <span class="spec-tag">(1.21mm ± 0.02)</span></label>
-            <input type="number" id="micro_check" step="0.01" oninput="validateMicro()">
-        </div>
-        <div class="form-group">
-            <div id="calibStatus" class="calibration-box cal-fail">UNVERIFIED</div>
-        </div>
+        <div class="form-group"><label>AG CODE</label><input type="text" id="ag_code" readonly></div>
+        <div class="form-group"><label>Can Size</label><input type="text" id="can_size" readonly></div>
+        <div class="form-group"><label>Pallet (Cans)</label><input type="text" id="pallet_cans" readonly></div>
+        <div class="form-group"><label>Pallet (Lids)</label><input type="text" id="pallet_lids" readonly></div>
+        <div class="form-group"><label>Dept</label><select id="dept"><option>Production</option><option>Quality</option></select></div>
+        <div class="form-group"><label>Stage</label><select id="stage" onchange="renderTable()"><option>Start-up</option><option>During production</option><option>After production</option></select></div>
+        <div class="form-group"><label>Micro #</label><input type="text" id="micro_serial"></div>
+        <div class="form-group"><label>Verify <span class="spec-tag">(1.21±0.02)</span></label><input type="number" id="micro_check" step="0.01"></div>
     </div>
 
-    <div class="inspection-card">
-        <div class="card-header">Actual Can Inspection Data</div>
-        <div class="card-body">
-            <div class="meta-grid" style="background:none; padding:0; border:none; margin-bottom:15px;">
-                <div class="form-group">
-                    <label>Can Number</label>
-                    <select id="can_no"><option value="1">Can 1</option><option value="2">Can 2</option></select>
-                </div>
-                <div class="form-group">
-                    <label>Measurement Point</label>
-                    <select id="point_no"><option value="1">Point 1</option><option value="2">Point 2</option><option value="3">Point 3</option></select>
-                </div>
-            </div>
-
-            <div class="meta-grid" style="background:none; padding:0; border:none;">
-                <div class="form-group" id="vacuumRow">
-                    <label>Vacuum KPa <span class="spec-tag">(> -5 KPa)</span></label>
-                    <input type="number" id="vac" step="0.1">
-                </div>
-                <div class="form-group">
-                    <label>Body Hook <span class="spec-tag">(1.80-2.15 mm)</span></label>
-                    <input type="number" id="bh" step="0.01" oninput="calculate()">
-                </div>
-                <div class="form-group">
-                    <label>Cover Hook <span class="spec-tag">(1.70-2.10 mm)</span></label>
-                    <input type="number" id="ch" step="0.01" oninput="calculate()">
-                </div>
-                <div class="form-group">
-                    <label>Seam Length <span class="spec-tag">(2.65-3.05 External)</span></label>
-                    <input type="number" id="sl" step="0.01" oninput="calculate()">
-                </div>
-                <div class="form-group">
-                    <label>Thickness <span class="spec-tag">(Ext 1.24/Int 1.20)</span></label>
-                    <input type="number" id="st" step="0.01" oninput="calculate()">
-                </div>
-                <div class="form-group">
-                    <label>Tightness <span class="spec-tag">(70-100%)</span></label>
-                    <input type="number" id="tightness">
-                </div>
-            </div>
-
-            <!-- Calculation Grid with Written Specs -->
-            <div class="calc-grid">
-                <div class="calc-item">
-                    <label>Actual Overlap <span class="spec-tag">(1.0mm Min)</span></label>
-                    <span id="res_ov" class="calc-val">0.00</span>
-                </div>
-                <div class="calc-item">
-                    <label>Overlap % <span class="spec-tag">(Min 45%)</span></label>
-                    <span id="res_ovp" class="calc-val">0%</span>
-                </div>
-                <div class="calc-item">
-                    <label>B.H.B. % <span class="spec-tag">(70 - 90%)</span></label>
-                    <span id="res_bhb" class="calc-val">0%</span>
-                </div>
-                <div class="calc-item">
-                    <label>Free Space <span class="spec-tag">(Ext 0.19 / Int 0.17)</span></label>
-                    <span id="res_fs" class="calc-val">0.00</span>
-                </div>
-            </div>
-        </div>
+    <div id="aiDiagnosticPanel" class="ai-panel">
+        <h3>⚠️ AI Seamer Diagnostics</h3>
+        <ul id="aiList" style="font-size: 12px; color: #5d4037;"></ul>
     </div>
 
-    <div id="footerMetadata" style="margin-top:20px;">
-        <label>Inspected By (Signature Name) *</label>
-        <input type="text" id="inspector" placeholder="Type name to sign off...">
+    <div class="table-container">
+        <table id="inspectionTable">
+            <thead>
+                <tr id="canHeaderRow"></tr>
+                <tr id="pointHeaderRow"></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
     </div>
 
-    <button id="submitBtn" class="btn-submit" onclick="submitEntry()">SUBMIT POINT RECORD</button>
+    <div id="footerMeta" style="margin-top:20px;">
+        <label>Inspected By (Signature) *</label>
+        <input type="text" id="inspector" style="width:100%;" placeholder="Enter name...">
+    </div>
+
+    <button id="submitBtn" class="btn-submit" onclick="submitFullEntry()">SYNC DATA TO CLOUD</button>
 </div>
 
 <script>
     const sb = supabase.createClient('https://kbpyivgmgipskwiutbtk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImticHlpdmdtZ2lwc2t3aXV0YnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ3ODYsImV4cCI6MjA5NDk0MDc4Nn0.kGcr57Mdnd9jFepz9ndDFuEUEwD8qRVqIkCNhmgCKPY');
-    let appMode = 'Report';
+    let currentMode = 'Report';
+    const fields = [
+        { id: 'vac', label: 'Vacuum (> -5)', isCalc: false },
+        { id: 'bh', label: 'Body Hook (1.80-2.15)', isCalc: false },
+        { id: 'ch', label: 'Cover Hook (1.70-2.10)', isCalc: false },
+        { id: 'sl', label: 'Length (2.65-3.05)', isCalc: false },
+        { id: 'st', label: 'Thickness (1.10-1.24)', isCalc: false },
+        { id: 'ovp', label: 'Overlap % (Min 45%)', isCalc: true },
+        { id: 'bhb', label: 'BHB % (70-90%)', isCalc: true },
+        { id: 'fs', label: 'Free Space (0.03-0.19)', isCalc: true }
+    ];
 
-    function setMode(m) {
-        appMode = m;
-        document.getElementById('metaSection').style.display = (m === 'Quick') ? 'none' : 'grid';
-        document.getElementById('vacuumRow').style.display = (m === 'Quick') ? 'none' : 'flex';
-        document.getElementById('modeReport').classList.toggle('active', m === 'Report');
-        document.getElementById('modeQuick').classList.toggle('active', m === 'Quick');
-        document.getElementById('workspaceTitle').innerText = (m === 'Quick') ? 'QUICK TEST MODE' : 'REC 7.2.12 WORKSPACE';
-    }
+    async function searchRecords() {
+        const ag = document.getElementById('search_ag').value;
+        const pal = document.getElementById('search_pallet').value;
+        const container = document.getElementById('searchResults');
+        container.innerHTML = '';
+        container.style.display = 'block';
 
-    function validateMicro() {
-        const val = parseFloat(document.getElementById('micro_check').value);
-        const status = document.getElementById('calibStatus');
-        if (val >= 1.19 && val <= 1.23) {
-            status.innerText = "VERIFIED"; status.className = "calibration-box cal-pass";
+        // Query Supabase for matching historical entries
+        const { data } = await sb.from('double_seam_inspection_log')
+            .select('ag_code, can_size, inspection_stage, pallet_cans, pallet_lids, id')
+            .or(`ag_code.eq.${ag},pallet_cans.eq.${pal}`)
+            .order('created_at', { ascending: false }).limit(10);
+
+        if(data && data.length > 0) {
+            data.forEach(r => {
+                const item = document.createElement('div');
+                item.className = 'result-item';
+                item.innerText = `[${r.ag_code}] Pallet: ${r.pallet_cans} | Last Stage: ${r.inspection_stage}`;
+                item.onclick = () => loadRecord(r);
+                container.appendChild(item);
+            });
         } else {
-            status.innerText = "OUT OF SPEC"; status.className = "calibration-box cal-fail";
+            container.innerHTML = '<div class="result-item">No active records found.</div>';
         }
     }
 
-    async function lookupAndCheck() {
-        const code = document.getElementById('ag_code').value;
-        if(code.length < 3) return;
-        const { data } = await sb.from('ag_code_master').select('*').eq('ag_code', code).single();
-        if(data) document.getElementById('autoPopInfo').innerText = `SIZE: ${data.can_size} | PALLET: ${data.can_pallet_code}`;
+    function loadRecord(r) {
+        document.getElementById('ag_code').value = r.ag_code;
+        document.getElementById('can_size').value = r.can_size;
+        document.getElementById('pallet_cans').value = r.pallet_cans;
+        document.getElementById('pallet_lids').value = r.pallet_lids;
+        document.getElementById('searchResults').style.display = 'none';
+        renderTable();
         checkApproval();
+    }
+
+    function setMode(m) {
+        currentMode = m;
+        document.getElementById('metaSection').style.display = (m === 'Quick') ? 'none' : 'grid';
+        document.getElementById('modeReport').classList.toggle('active', m === 'Report');
+        document.getElementById('modeQuick').classList.toggle('active', m === 'Quick');
+        renderTable();
+    }
+
+    function renderTable() {
+        const canCount = (currentMode === 'Report') ? 2 : 1;
+        const canHeader = document.getElementById('canHeaderRow');
+        const pointHeader = document.getElementById('pointHeaderRow');
+        const body = document.getElementById('tableBody');
+
+        canHeader.innerHTML = '<th>Measurement</th>';
+        pointHeader.innerHTML = '<th>Unit: mm/KPa</th>';
+        for(let c=1; c<=canCount; c++) {
+            canHeader.innerHTML += `<th colspan="3" class="can-header">CAN ${c}</th>`;
+            for(let p=1; p<=3; p++) pointHeader.innerHTML += `<th>Pt ${p}</th>`;
+        }
+
+        body.innerHTML = '';
+        fields.forEach(f => {
+            if (currentMode === 'Quick' && f.id === 'vac') return;
+            let row = `<tr class="${f.isCalc ? 'calc-row' : ''}"><td>${f.label}</td>`;
+            for(let c=1; c<=canCount; c++) {
+                for(let p=1; p<=3; p++) {
+                    const inputId = `${f.id}_c${c}_p${p}`;
+                    row += `<td><input type="number" step="0.01" class="table-input" id="${inputId}" 
+                            ${f.isCalc ? 'readonly' : `oninput="runAI()"`}></td>`;
+                }
+            }
+            body.innerHTML += row + '</tr>';
+        });
+    }
+
+    function runAI() {
+        const aiList = document.getElementById('aiList');
+        const aiPanel = document.getElementById('aiDiagnosticPanel');
+        let issues = [];
+        const canCount = (currentMode === 'Report') ? 2 : 1;
+
+        for(let c=1; c<=canCount; c++) {
+            for(let p=1; p<=3; p++) {
+                const bh = parseFloat(document.getElementById(`bh_c${c}_p${p}`).value) || 0;
+                const ch = parseFloat(document.getElementById(`ch_c${c}_p${p}`).value) || 0;
+                const sl = parseFloat(document.getElementById(`sl_c${c}_p${p}`).value) || 0;
+                const st = parseFloat(document.getElementById(`st_c${c}_p${p}`).value) || 0;
+                
+                if(bh > 0 && ch > 0 && sl > 0) {
+                    const te = 0.21, tb = 0.21;
+                    const ov = (bh + ch + te) - sl;
+                    const ovp = (ov / (sl - (2*te + tb))) * 100;
+                    const bhb = ((bh - 1.1*tb) / (sl - 1.1*(2*te + tb))) * 100;
+                    const fs = st - (2*tb + 3*te);
+
+                    document.getElementById(`ovp_c${c}_p${p}`).value = Math.round(ovp);
+                    document.getElementById(`bhb_c${c}_p${p}`).value = Math.round(bhb);
+                    document.getElementById(`fs_c${c}_p${p}`).value = fs.toFixed(2);
+
+                    if(ovp < 45 && ovp > 0) issues.push(`Can ${c}: Low Overlap - Check 1st operation roll tightness [4].`);
+                }
+            }
+        }
+        aiList.innerHTML = [...new Set(issues)].map(i => `<li>${i}</li>`).join('');
+        aiPanel.style.display = issues.length > 0 ? 'block' : 'none';
     }
 
     async function checkApproval() {
         const code = document.getElementById('ag_code').value;
         const banner = document.getElementById('approvalBanner');
-        if(code.length < 3 || appMode === 'Quick') { banner.style.display = 'none'; return; }
+        if(code.length < 3) return;
         const { data } = await sb.from('startup_approval_dashboard').select('*').eq('ag_code', code).single();
         if(data && data.production_ready && data.quality_ready) {
             banner.innerText = "✅ APPROVED FOR CLOSING"; banner.className = "banner approved";
@@ -216,50 +240,33 @@
         }
     }
 
-    function calculate() {
-        const bh = parseFloat(document.getElementById('bh').value) || 0,
-              ch = parseFloat(document.getElementById('ch').value) || 0,
-              sl = parseFloat(document.getElementById('sl').value) || 0,
-              st = parseFloat(document.getElementById('st').value) || 0;
-        const te = 0.21, tb = 0.21;
-        const ov = (bh + ch + te) - sl;
-        const ovp = (ov / (sl - (2*te + tb))) * 100;
-        const bhb = ((bh - 1.1*tb) / (sl - 1.1*(2*te + tb))) * 100;
-        const fs = st - (2*tb + 3*te);
-        document.getElementById('res_ov').innerText = ov.toFixed(2);
-        document.getElementById('res_ovp').innerText = Math.round(ovp) + "%";
-        document.getElementById('res_bhb').innerText = Math.round(bhb) + "%";
-        document.getElementById('res_fs').innerText = fs.toFixed(2);
-        return { ov, ovp, bhb, fs };
+    async function submitFullEntry() {
+        const btn = document.getElementById('submitBtn');
+        btn.innerText = "Syncing with Cloud...";
+        const canCount = (currentMode === 'Report') ? 2 : 1;
+        let batch = [];
+        for(let c=1; c<=canCount; c++) {
+            for(let p=1; p<=3; p++) {
+                batch.push({
+                    ag_code: document.getElementById('ag_code').value,
+                    can_size: document.getElementById('can_size').value,
+                    pallet_cans: document.getElementById('pallet_cans').value,
+                    pallet_lids: document.getElementById('pallet_lids').value,
+                    inspector_name: document.getElementById('inspector').value,
+                    inspection_stage: document.getElementById('stage').value,
+                    can_number: c, point_number: p,
+                    body_hook: parseFloat(document.getElementById(`bh_c${c}_p${p}`).value),
+                    overlap_percent: parseFloat(document.getElementById(`ovp_c${c}_p${p}`).value)
+                });
+            }
+        }
+        const { error } = await sb.from('double_seam_inspection_log').insert(batch);
+        if(!error) alert("Records synced successfully!");
+        btn.innerText = "SYNC DATA TO CLOUD";
+        checkApproval();
     }
 
-    async function submitEntry() {
-        const c = calculate();
-        const btn = document.getElementById('submitBtn');
-        btn.innerText = "Saving to Database...";
-        const entry = {
-            ag_code: document.getElementById('ag_code').value,
-            inspector_name: document.getElementById('inspector').value,
-            department: document.getElementById('department').value,
-            inspection_stage: document.getElementById('stage').value,
-            test_type: appMode,
-            can_number: parseInt(document.getElementById('can_no').value),
-            point_number: parseInt(document.getElementById('point_no').value),
-            vacuum_kpa: (appMode === 'Quick') ? 0 : parseFloat(document.getElementById('vac').value) || 0,
-            body_hook: parseFloat(document.getElementById('bh').value),
-            cover_hook: parseFloat(document.getElementById('ch').value),
-            seam_length: parseFloat(document.getElementById('sl').value),
-            seam_thickness: parseFloat(document.getElementById('st').value),
-            overlap_percent: c.ovp, bhb_percent: c.bhb, freespace: c.fs
-        };
-        const { error } = await sb.from('double_seam_inspection_log').insert([entry]);
-        if(!error) { 
-            alert("Point saved successfully!"); checkApproval(); 
-            const pt = parseInt(document.getElementById('point_no').value);
-            if(pt < 3) document.getElementById('point_no').value = pt + 1;
-        } else { alert("Error: " + error.message); }
-        btn.innerText = "SUBMIT POINT RECORD";
-    }
+    window.onload = renderTable;
 </script>
 </body>
 </html>
