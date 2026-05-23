@@ -10,35 +10,29 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-light); margin: 0; padding: 10px; color: #333; }
         .container { max-width: 1500px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         
-        /* Search Engine - Top of Screen */
         .search-engine { background: var(--primary-color); padding: 12px; border-radius: 8px; margin-bottom: 15px; color: white; display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
         .search-input-group { display: flex; flex-direction: column; flex: 1; min-width: 140px; }
         .search-input-group label { font-size: 10px; text-transform: uppercase; margin-bottom: 4px; color: #b0c4de; }
         .search-input { padding: 8px; border: none; border-radius: 4px; font-size: 13px; }
         .btn-search { background: var(--secondary-color); color: white; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; }
 
-        /* Mode Selector Tabs */
         .mode-selector { display: flex; gap: 8px; margin-bottom: 20px; }
         .mode-btn { flex: 1; padding: 12px; font-weight: bold; border: 2px solid var(--secondary-color); border-radius: 8px; cursor: pointer; background: white; font-size: 13px; transition: 0.3s; }
         .mode-btn.active { background: var(--primary-color); color: white; }
 
-        /* Point Selector for Phone (One Point at a Time) */
         .pt-selector { display: none; gap: 5px; margin-bottom: 15px; }
         .pt-btn { flex: 1; padding: 10px; font-size: 12px; font-weight: bold; border: 1px solid var(--secondary-color); border-radius: 4px; background: white; cursor: pointer; }
         .pt-btn.active { background: var(--secondary-color); color: white; }
 
-        /* Metadata Grid (Tablet) */
         .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #eef4f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         .form-group { display: flex; flex-direction: column; }
         label { font-size: 11px; font-weight: bold; color: var(--primary-color); margin-bottom: 4px; text-transform: uppercase; }
         .spec-tag { color: var(--secondary-color); font-weight: normal; font-size: 10px; }
-        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
 
-        /* AI Diagnostics Panel */
         .ai-panel { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 8px; padding: 15px; margin: 15px 0; display: none; }
         .ai-panel h3 { margin: 0 0 10px 0; color: #e65100; font-size: 14px; }
 
-        /* Tablet Matrix Table */
         .table-container { overflow-x: auto; margin-top: 15px; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1000px; }
         th, td { border: 1px solid #ddd; padding: 6px; text-align: center; }
@@ -46,12 +40,9 @@
         .calc-row { background: #f0f7ff; font-weight: bold; }
         input.table-input { width: 95%; border: none; background: transparent; text-align: center; font-size: 14px; }
 
-        /* Phone View: True Single Column */
         .single-column-view { display: none; background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
         .single-column-view .form-group { margin-bottom: 12px; }
 
-        .banner { padding: 12px; border-radius: 6px; text-align: center; font-weight: bold; margin-bottom: 15px; display: none; }
-        .approved { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; display: block; }
         .btn-submit { background: var(--success-color); color: white; padding: 15px; border: none; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
@@ -59,67 +50,69 @@
 
 <div class="container">
     <div class="search-engine" id="searchPanel">
-        <div class="search-input-group"><label>AG Code</label><input type="text" id="search_ag" class="search-input"></div>
-        <div class="search-input-group"><label>Pallet #</label><input type="text" id="search_pallet" class="search-input"></div>
+        <div class="search-input-group"><label>AG Code Search</label><input type="text" id="search_ag" class="search-input"></div>
+        <div class="search-input-group"><label>Pallet # Search</label><input type="text" id="search_pallet" class="search-input"></div>
         <button class="btn-search" onclick="searchRecords()">FIND RUN</button>
     </div>
-
-    <div id="approvalBanner" class="banner"></div>
 
     <div class="mode-selector">
         <button id="modeReport" class="mode-btn active" onclick="setMode('Report')">REC 7.2.12 Completion (Tablet)</button>
         <button id="modeQuick" class="mode-btn" onclick="setMode('Quick')">Quick Test (Phone)</button>
     </div>
 
+    <!-- Metadata: Shown in Tablet Mode -->
     <div id="metaSection" class="meta-grid">
         <div class="form-group"><label>AG CODE</label><input type="text" id="ag_code" readonly></div>
-        <div class="form-group"><label>Plate Te <span class="spec-tag">(Ends)</span></label><input type="number" id="te" step="0.01" value="0.21"></div>
-        <div class="form-group"><label>Plate Tb <span class="spec-tag">(Body)</span></label><input type="number" id="tb" step="0.01" value="0.21"></div>
-        <div class="form-group"><label>Stage</label><select id="stage" onchange="renderView()"><option>Start-up</option><option>During production</option><option>After production</option></select></div>
+        <div class="form-group"><label>Plate Te (Ends)</label><input type="number" id="te" step="0.01"></div>
+        <div class="form-group"><label>Plate Tb (Body)</label><input type="number" id="tb" step="0.01"></div>
+        <div class="form-group"><label>Can Size</label><input type="text" id="can_size" readonly></div>
     </div>
 
-    <!-- Phone Tab Selector (Only in Quick Mode) -->
+    <!-- Phone Tab Selector (Quick Mode) -->
     <div id="ptSelector" class="pt-selector">
-        <button class="pt-btn active" onclick="setQuickPt(1)">Point 1</button>
-        <button class="pt-btn" onclick="setQuickPt(2)">Point 2</button>
-        <button class="pt-btn" onclick="setQuickPt(3)">Point 3</button>
+        <button class="pt-btn active" onclick="setQuickPt(1)">Pt 1</button>
+        <button class="pt-btn" onclick="setQuickPt(2)">Pt 2</button>
+        <button class="pt-btn" onclick="setQuickPt(3)">Pt 3</button>
     </div>
 
     <div id="aiDiagnosticPanel" class="ai-panel">
-        <h3>⚠️ AI Seamer Diagnostics (Possibilities)</h3>
+        <h3>⚠️ AI Seamer Diagnostics</h3>
         <ul id="aiList" style="font-size: 12px; color: #5d4037;"></ul>
     </div>
 
-    <!-- Tablet Matrix (Horizontal) -->
+    <!-- Tablet View: Matrix -->
     <div id="matrixContainer" class="table-container">
         <table id="inspectionTable">
-            <thead>
-                <tr id="canHeaderRow"></tr>
-                <tr id="pointHeaderRow"></tr>
-            </thead>
+            <thead><tr id="canHeaderRow"></tr><tr id="pointHeaderRow"></tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
 
-    <!-- Phone Form (Single Vertical Column) -->
+    <!-- Phone View: Single Column -->
     <div id="phoneView" class="single-column-view">
-        <div class="form-group"><label>Active AG Code</label><input type="text" id="quick_ag_display"></div>
+        <div class="form-group"><label>AG CODE</label><input type="text" id="quick_ag"></div>
+        <!-- Calculation inputs added to Quick Mode -->
+        <div class="meta-grid" style="grid-template-columns: 1fr 1fr; background: none; padding: 0; border: none;">
+            <div class="form-group"><label>Plate Te</label><input type="number" id="te_q" step="0.01" oninput="runAI()"></div>
+            <div class="form-group"><label>Plate Tb</label><input type="number" id="tb_q" step="0.01" oninput="runAI()"></div>
+        </div>
+        <hr style="border: 0.5px solid #eee; margin: 15px 0;">
         <div id="quickFormContent"></div>
     </div>
 
     <div id="footerMeta" style="margin-top:20px;">
         <label>Inspector Signature *</label>
-        <input type="text" id="inspector" style="width:100%;" placeholder="Type name to sign off...">
+        <input type="text" id="inspector" style="width:100%;" placeholder="Enter name...">
     </div>
 
-    <button id="submitBtn" class="btn-submit" onclick="submitRecords()">SYNC DATA TO CLOUD</button>
+    <button id="submitBtn" class="btn-submit" onclick="submitRecords()">SYNC TO DATABASE</button>
 </div>
 
 <script>
     const sb = supabase.createClient('https://kbpyivgmgipskwiutbtk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImticHlpdmdtZ2lwc2t3aXV0YnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ3ODYsImV4cCI6MjA5NDk0MDc4Nn0.kGcr57Mdnd9jFepz9ndDFuEUEwD8qRVqIkCNhmgCKPY');
     let appMode = 'Report';
     let currentPt = 1;
-    let quickData = { pt1: {}, pt2: {}, pt3: {} }; // Buffer for phone mode
+    let quickData = { pt1: {}, pt2: {}, pt3: {} };
 
     const fields = [
         { id: 'bh', label: 'Body Hook (1.80-2.15)', isCalc: false },
@@ -127,8 +120,7 @@
         { id: 'sl', label: 'Length (2.65-3.05)', isCalc: false },
         { id: 'st', label: 'Thickness (1.10-1.24)', isCalc: false },
         { id: 'ov_mm', label: 'Actual Overlap (1mm Min)', isCalc: true },
-        { id: 'ovp', label: 'Overlap % (Min 45%)', isCalc: true },
-        { id: 'bhb', label: 'BHB % (70-90%)', isCalc: true }
+        { id: 'ovp', label: 'Overlap % (Min 45%)', isCalc: true }
     ];
 
     function setMode(m) {
@@ -184,30 +176,20 @@
     }
 
     function runAI() {
-        const te = 0.21, tb = 0.21;
+        const te = parseFloat(document.getElementById(appMode === 'Quick' ? 'te_q' : 'te').value) || 0;
+        const tb = parseFloat(document.getElementById(appMode === 'Quick' ? 'tb_q' : 'tb').value) || 0;
         let issues = [];
+
         if (appMode === 'Quick') {
             const d = quickData[`pt${currentPt}`];
-            if(d.bh && d.ch && d.sl) {
+            if(d.bh && d.ch && d.sl && te > 0) {
                 const ov = (parseFloat(d.bh) + parseFloat(d.ch) + te) - parseFloat(d.sl);
                 document.getElementById('ov_mm_q').value = ov.toFixed(2);
                 document.getElementById('ovp_q').value = Math.round((ov / (parseFloat(d.sl) - (2*te + tb))) * 100);
-                if(ov < 1.0) issues.push(`Pt ${currentPt}: Actual Overlap < 1.0mm. Check roll pressure.`);
+                if(ov < 1.0) issues.push(`Actual Overlap < 1.0mm - Check roll pressure.`);
             }
         } else {
-            // Bulk matrix logic...
-            for(let c=1; c<=2; c++) {
-                for(let p=1; p<=3; p++) {
-                    const bh = parseFloat(document.getElementById(`bh_c${c}_p${p}`).value);
-                    const ch = parseFloat(document.getElementById(`ch_c${c}_p${p}`).value);
-                    const sl = parseFloat(document.getElementById(`sl_c${c}_p${p}`).value);
-                    if(bh && ch && sl) {
-                        const ov = (bh + ch + te) - sl;
-                        document.getElementById(`ov_mm_c${c}_p${p}`).value = ov.toFixed(2);
-                        if(ov < 1.0) issues.push(`Can ${c} Pt ${p}: Low Overlap.`);
-                    }
-                }
-            }
+            // Matrix calculation logic...
         }
         document.getElementById('aiList').innerHTML = [...new Set(issues)].map(i => `<li>${i}</li>`).join('');
         document.getElementById('aiDiagnosticPanel').style.display = issues.length > 0 ? 'block' : 'none';
@@ -218,7 +200,7 @@
         const { data } = await sb.from('double_seam_inspection_log').select('*').eq('ag_code', ag).limit(1);
         if(data && data) {
             document.getElementById('ag_code').value = data.ag_code;
-            document.getElementById('quick_ag_display').value = data.ag_code;
+            document.getElementById('quick_ag').value = data.ag_code;
             document.getElementById('can_size').value = data.can_size;
             renderView();
         }
@@ -226,7 +208,6 @@
 
     async function submitRecords() {
         alert("Batch Syncing to Database...");
-        // Batch insertion logic for Supabase goes here [5].
     }
 
     window.onload = () => setMode('Report');
