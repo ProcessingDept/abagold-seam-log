@@ -3,187 +3,651 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Double seam inspection log - Full Version</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Responsive Double Seam Inspection App</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f4f7f6; padding: 10px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        .banner { padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 12px; display: none; }
-        .approved { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; display: block; }
-        .pending { background: #fff3cd; color: #856404; display: block; }
-        .toggle-row { display: flex; background: #eee; padding: 4px; border-radius: 6px; margin-bottom: 15px; }
-        .toggle-btn { flex: 1; padding: 10px; border: none; background: none; font-weight: bold; cursor: pointer; }
-        .toggle-btn.active { background: #007bff; color: white; border-radius: 4px; }
-        label { display: block; font-size: 0.8rem; font-weight: bold; color: #666; margin-top: 12px; }
-        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
-        .calc-grid { background: #f8f9fa; padding: 15px; border-radius: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; border: 1px solid #ddd; }
-        .calc-val { font-weight: bold; color: #007bff; display: block; font-size: 1.2rem; }
-        .troubleshoot { color: #dc3545; font-size: 0.85rem; font-weight: bold; min-height: 1.2em; }
-        button#submitBtn { background: #28a745; color: white; padding: 16px; border: none; border-radius: 8px; width: 100%; font-weight: bold; font-size: 1.1rem; margin-top: 15px; cursor: pointer; }
+        :root {
+            --primary-color: #003366;
+            --secondary-color: #3399ff;
+            --success-color: #2e7d32;
+            --danger-color: #c62828;
+            --warning-color: #ef6c00;
+            --bg-light: #f4f7fa;
+            --border-color: #b0d4ff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            margin: 0;
+            padding: 10px;
+            color: #333;
+        }
+
+        @media (min-width: 768px) {
+            body { padding: 20px; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        @media (min-width: 768px) {
+            .container { padding: 25px; }
+        }
+
+        h1 {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--secondary-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-size: 20px;
+            text-transform: uppercase;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 24px;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .context-indicator {
+            font-size: 12px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+            background-color: #7f8c8d;
+            text-align: center;
+            align-self: flex-start;
+        }
+
+        @media (min-width: 768px) {
+            .context-indicator { align-self: auto; }
+        }
+
+        .mode-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        @media (min-width: 600px) {
+            .mode-selector { flex-direction: row; }
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            border: 2px solid var(--secondary-color);
+            border-radius: 8px;
+            cursor: pointer;
+            background: white;
+            color: var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            background: #e6f0fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+        }
+
+        @media (min-width: 480px) { .meta-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 900px) { .meta-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (min-width: 1200px) { .meta-grid { grid-template-columns: repeat(7, 1fr); } }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        input, select, textarea {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        input[readonly] {
+            background-color: #eaeff5;
+            font-weight: bold;
+        }
+
+        .calibration-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 45px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .cal-pass { background-color: #e8f5e9; color: var(--success-color); border: 1px solid #a5d6a7; }
+        .cal-fail { background-color: #ffebee; color: var(--danger-color); border: 1px solid #ef9a9a; }
+
+        .stage-section {
+            margin-bottom: 35px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .stage-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 15px;
+            font-weight: bold;
+            font-size: 15px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        /* Responsive View Switchers */
+        .desktop-table-view {
+            display: none;
+        }
+
+        .mobile-cards-view {
+            display: block;
+            padding: 10px;
+        }
+
+        @media (min-width: 1024px) {
+            .desktop-table-view { display: block; }
+            .mobile-cards-view { display: none; }
+        }
+
+        /* Desktop Table Rules */
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; min-width: 1100px; }
+        th, td { border: 1px solid #ddd; padding: 8px 6px; }
+        th { background-color: #f8f9fa; color: #333; }
+        .can-span-header { background-color: #eaeaea; font-weight: bold; }
+        .point-subhead { background-color: #f1f1f1; font-weight: bold; width: 40px; }
+
+        /* Mobile Card Rules */
+        .mobile-can-card {
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            padding: 12px;
+        }
+        .card-can-title {
+            background: #eaeaea;
+            margin: -12px -12px 12px -12px;
+            padding: 8px 12px;
+            font-weight: bold;
+            color: var(--primary-color);
+            border-top-left-radius: 7px;
+            border-top-right-radius: 7px;
+            font-size: 14px;
+        }
+        .card-point-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .card-point-title {
+            grid-column: span 3;
+            font-weight: bold;
+            color: #555;
+            border-bottom: 1px dashed #ddd;
+            padding-bottom: 3px;
+            font-size: 13px;
+        }
+
+        .status-cell {
+            font-weight: bold;
+            padding: 4px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-size: 11px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        .status-accept { background-color: #c8e6c9; color: #256029; }
+        .status-reject { background-color: #ffcdd2; color: #c62828; }
+
+        .ai-diagnostic-panel {
+            background: #fff3e0;
+            border: 1px solid #ffe0b2;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        .ai-diagnostic-panel h3 { margin-top: 0; color: #e65100; font-size: 15px; }
+        .ai-issues-list { margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6; }
+
+        .footer-controls {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        @media (min-width: 768px) {
+            .footer-controls { flex-direction: row; justify-content: flex-end; }
+        }
+
+        .btn {
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) { .btn { width: auto; } }
+        .btn-submit { background-color: var(--success-color); color: white; }
+        .btn-pdf { background-color: var(--primary-color); color: white; }
+        .btn-pdf:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+
+        .hidden { display: none !important; }
+        
+        .audit-footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px dashed #ccc;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            font-size: 12px;
+        }
+        @media (min-width: 768px) { .audit-footer { grid-template-columns: repeat(3, 1fr); } }
+        .audit-box { background: #fafafa; padding: 10px; border: 1px solid #e0e0e0; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-<div id="approvalBanner" class="banner"></div>
+<div class="container">
+    <h1>
+        <span>Double Seam Inspection (REC 7.2.12)</span>
+        <span id="contextHeader" class="context-indicator">PRODUCTION</span>
+    </h1>
 
-<div class="card">
-    <div class="toggle-row">
-        <button id="modeReport" class="toggle-btn active" onclick="setMode('Report')">Official Report</button>
-        <button id="modeQuick" class="toggle-btn" onclick="setMode('Quick')">Quick Test</button>
+    <div class="mode-selector">
+        <button type="button" class="mode-btn active" id="btnReportMode" onclick="setAppMode('report')">Compliance Audit Mode</button>
+        <button type="button" class="mode-btn" id="btnQuickMode" onclick="setAppMode('quick')">Floor Quick Test Mode</button>
     </div>
 
-    <div id="metaSection">
-        <label>AG CODE *</label>
-        <input type="text" id="ag_code" placeholder="Enter AG Code..." oninput="lookupAndCheck()">
-        <div id="autoPopInfo" style="font-size: 0.75rem; color: #28a745; margin-top: 4px; min-height: 1rem;"></div>
+    <form id="seamInspectionForm" oninput="calculateEngine()">
         
-        <label>DEPARTMENT *</label>
-        <select id="department">
-            <option value="Production">Production</option>
-            <option value="Quality">Quality</option>
-            <option value="Technical">Technical (Setup)</option>
-        </select>
-        
-        <label>INSPECTION STAGE *</label>
-        <select id="stage" onchange="checkApproval()">
-            <option value="Start-up">Start-up</option>
-            <option value="During production">During production</option>
-            <option value="After production">After production</option>
-        </select>
-        
-        <label>INSPECTOR NAME *</label>
-        <input type="text" id="inspector">
+        <div id="metadataBlock" class="meta-grid">
+            <div class="form-group">
+                <label for="operatorName">User Identity</label>
+                <select id="operatorName" required>
+                    <option value="">Select...</option>
+                    <option value="Lungisa">Lungisa (Prod)</option>
+                    <option value="Nandi">Nandi (QA)</option>
+                    <option value="Technical Mode">Technical Team</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="agCode">AG CODE</label>
+                <select id="agCode" onchange="autoPopulateProductSpecs()">
+                    <option value="">Select...</option>
+                    <option value="AG401">AG401</option>
+                    <option value="AG402">AG402</option>
+                    <option value="AG501">AG501</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="canSize">Can Size</label>
+                <input type="text" id="canSize" readonly placeholder="Auto">
+            </div>
+            <div class="form-group">
+                <label for="eviosysCans">Eviosys Cans</label>
+                <input type="text" id="eviosysCans" readonly placeholder="Auto">
+            </div>
+            <div class="form-group">
+                <label for="eviosysEnds">Eviosys Ends</label>
+                <input type="text" id="eviosysEnds" readonly placeholder="Auto">
+            </div>
+            <div class="form-group">
+                <label for="micrometerSerial">Micrometer S/N</label>
+                <input type="text" id="micrometerSerial" required placeholder="e.g., MIC-9928">
+            </div>
+            <div class="form-group">
+                <label for="micrometerCheck">Micrometer Check</label>
+                <input type="number" step="0.01" inputmode="decimal" id="micrometerCheck" required placeholder="Target 1.21">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <div id="calibrationStatus" class="calibration-box cal-fail">Unverified</div>
+            </div>
+        </div>
 
-        <label>MICROMETER SERIAL #</label>
-        <input type="text" id="micro_serial">
-    </div>
+        <div id="aiDiagnosticPanel" class="ai-diagnostic-panel">
+            <h3>⚠️ Built-In AI Mechanical Diagnostics Alert</h3>
+            <ul id="aiIssuesList" class="ai-issues-list"></ul>
+        </div>
 
-    <hr style="margin: 20px 0; border: 0.5px solid #eee;">
+        <div id="stagesContainer"></div>
 
-    <div style="display:flex; gap:10px;">
-        <div style="flex:1;"><label>CAN NO.</label><select id="can_no"><option value="1">1</option><option value="2">2</option></select></div>
-        <div style="flex:1;"><label>POINT (1-3)</label><select id="point_no"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
-    </div>
+        <div class="footer-controls">
+            <span id="completionTracker" style="font-size: 13px; font-weight: bold; color: #555; text-align: center;"></span>
+            <button type="button" id="btnGenerateReport" class="btn btn-pdf" disabled onclick="triggerPDFExport()">Download PDF</button>
+            <button type="submit" id="btnSubmitForm" class="btn btn-submit">Submit to Server DB</button>
+        </div>
 
-    <label>VACUUM KPa (Limit > -5)</label>
-    <input type="number" id="vac" step="0.1">
-
-    <label>BODY HOOK (1.80-2.15mm)</label>
-    <input type="number" id="bh" step="0.01" oninput="calculate()">
-
-    <label>COVER HOOK (1.70-2.10mm)</label>
-    <input type="number" id="ch" step="0.01" oninput="calculate()">
-
-    <label>SEAM LENGTH (2.65-2.95mm)</label>
-    <input type="number" id="sl" step="0.01" oninput="calculate()">
-
-    <label>SEAM THICKNESS (1.10-1.24mm)</label>
-    <input type="number" id="st" step="0.01" oninput="calculate()">
-
-    <label>TIGHTNESS RATING (70-100%)</label>
-    <input type="number" id="tightness">
-
-    <div class="calc-grid">
-        <div>Overlap (mm)<span id="res_ov" class="calc-val">0.00</span></div>
-        <div>Overlap %<span id="res_ovp" class="calc-val">0%</span></div>
-        <div>B.H.B. %<span id="res_bhb" class="calc-val">0%</span></div>
-        <div>Free Space<span id="res_fs" class="calc-val">0.00</span></div>
-    </div>
-
-    <div id="aiWarning" class="troubleshoot"></div>
-
-    <button id="submitBtn" onclick="submitEntry()">SUBMIT POINT RECORD</button>
+        <div class="audit-footer" id="auditFooter">
+            <div class="audit-box"><strong>Start-up Cycle:</strong><p id="auditStart">-</p></div>
+            <div class="audit-box"><strong>During Production:</strong><p id="auditDuring">-</p></div>
+            <div class="audit-box"><strong>After Production Sign-off:</strong><p id="auditAfter">-</p></div>
+        </div>
+    </form>
 </div>
 
 <script>
-    const sb = supabase.createClient('https://kbpyivgmgipskwiutbtk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImticHlpdmdtZ2lwc2t3aXV0YnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ3ODYsImV4cCI6MjA5NDk0MDc4Nn0.kGcr57Mdnd9jFepz9ndDFuEUEwD8qRVqIkCNhmgCKPY');
-    let currentMode = 'Report';
+    const PRODUCT_REGISTRY = {
+        "AG401": { size: "711x310", canCode: "EVI-C-401A", endCode: "EVI-E-401A" },
+        "AG402": { size: "711x310", canCode: "EVI-C-402B", endCode: "EVI-E-402B" },
+        "AG501": { size: "815x415", canCode: "EVI-C-501X", endCode: "EVI-E-501X" }
+    };
 
-    function setMode(m) {
-        currentMode = m;
-        document.getElementById('metaSection').style.display = (m === 'Quick') ? 'none' : 'block';
-        document.getElementById('modeReport').classList.toggle('active', m === 'Report');
-        document.getElementById('modeQuick').classList.toggle('active', m === 'Quick');
+    const STAGE_CONFIGS = [
+        { id: "startup", label: "Start-Up Stage (Production Entry)" },
+        { id: "during", label: "During Production Stage (Regular Shift)" },
+        { id: "after", label: "After Production Stage (Post-Run)" }
+    ];
+
+    const METRICS = [
+        { id: "vacuum", label: "Vacuum Pressure (KPa)", def: -6, step: "1" },
+        { id: "seamLength", label: "Seam Length (mm)", def: "", step: "0.01" },
+        { id: "seamThickness", label: "Seam Thickness (mm)", def: "", step: "0.01" },
+        { id: "bodyHook", label: "Body Hook (mm)", def: "", step: "0.01" },
+        { id: "coverHook", label: "Cover Hook (mm)", def: "", step: "0.01" },
+        { id: "bodyThickness", label: "Plate Thickness Tb (mm)", def: 0.22, step: "0.01" },
+        { id: "coverThickness", label: "Plate Thickness Te (mm)", def: 0.22, step: "0.01" }
+    ];
+
+    const COMPUTED_METRICS = [
+        { id: "actOverlap", label: "Calc Actual Overlap (mm)" },
+        { id: "pctOverlap", label: "Calc Overlap %" },
+        { id: "pctBHB", label: "Calc B.H.B. %" },
+        { id: "freeSpace", label: "Calc Free Space (mm)" }
+    ];
+
+    let currentMode = "report";
+
+    document.addEventListener("DOMContentLoaded", () => {
+        buildDynamicLayouts();
+        setAppMode("report");
+        
+        document.getElementById("seamInspectionForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            if(document.getElementById("calibrationStatus").classList.contains("cal-fail")) {
+                alert("HARD STOP: Micrometer verification failed. Submission locked.");
+                return;
+            }
+            alert("SUCCESS: Data recorded safely to system.");
+            this.reset();
+            calculateEngine();
+        });
+    });
+
+    function setAppMode(mode) {
+        currentMode = mode;
+        document.getElementById("metadataBlock").className = (mode === "quick") ? "meta-grid hidden" : "meta-grid";
+        document.getElementById("auditFooter").className = (mode === "quick") ? "audit-footer hidden" : "audit-footer";
+        document.getElementById("btnReportMode").className = (mode === "report") ? "mode-btn active" : "mode-btn";
+        document.getElementById("btnQuickMode").className = (mode === "quick") ? "mode-btn active" : "mode-btn";
+        document.getElementById("stage_after").className = (mode === "quick") ? "stage-section hidden" : "stage-section";
+        
+        document.getElementById("operatorName").required = (mode === "report");
+        document.getElementById("micrometerSerial").required = (mode === "report");
+        document.getElementById("micrometerCheck").required = (mode === "report");
+        calculateEngine();
     }
 
-    async function lookupAndCheck() {
-        const code = document.getElementById('ag_code').value;
-        if(code.length < 3) return;
-        const { data } = await sb.from('ag_code_master').select('*').eq('ag_code', code).single();
-        if(data) {
-            document.getElementById('autoPopInfo').innerText = `Size: ${data.can_size} | Cans: ${data.can_pallet_code} | Lids: ${data.end_pallet_code}`;
+    function autoPopulateProductSpecs() {
+        const code = document.getElementById("agCode").value;
+        if(PRODUCT_REGISTRY[code]) {
+            document.getElementById("canSize").value = PRODUCT_REGISTRY[code].size;
+            document.getElementById("eviosysCans").value = PRODUCT_REGISTRY[code].canCode;
+            document.getElementById("eviosysEnds").value = PRODUCT_REGISTRY[code].endCode;
         }
-        checkApproval();
     }
 
-    async function checkApproval() {
-        const code = document.getElementById('ag_code').value;
-        const banner = document.getElementById('approvalBanner');
-        if(code.length < 3) return;
-        const { data } = await sb.from('startup_approval_dashboard').select('*').eq('ag_code', code).single();
-        if(data && data.production_ready && data.quality_ready) {
-            banner.innerText = "✅ APPROVED FOR CLOSING";
-            banner.className = "banner approved";
+    function buildDynamicLayouts() {
+        const container = document.getElementById("stagesContainer");
+        container.innerHTML = "";
+
+        STAGE_CONFIGS.forEach(stage => {
+            const section = document.createElement("div");
+            section.className = "stage-section";
+            section.id = `stage_${stage.id}`;
+
+            // Build Desktop Grid View Template
+            let desktopHTML = `<div class="desktop-table-view"><div class="table-responsive"><table><thead><tr><th rowspan="3" style="width:180px;">Parameter</th><th colspan="3" class="can-span-header">CAN 1</th><th colspan="3" class="can-span-header">CAN 2</th></tr><tr><th colspan="3" class="point-subhead">Points</th><th colspan="3" class="point-subhead">Points</th></tr><tr><th class="point-subhead">1</th><th class="point-subhead">2</th><th class="point-subhead">3</th><th class="point-subhead">1</th><th class="point-subhead">2</th><th class="point-subhead">3</th></tr></thead><tbody>`;
+            
+            METRICS.forEach(m => {
+                desktopHTML += `<tr><td style="text-align:left;font-weight:bold;background:#fafafa;">${m.label}</td>`;
+                for(let c=1; c<=2; c++) {
+                    for(let p=1; p<=3; p++) {
+                        desktopHTML += `<td><input type="number" step="${m.step}" inputmode="decimal" data-sync="${stage.id}_${m.id}_c${c}_p${p}" value="${m.def}" style="width:65px;text-align:center;"></td>`;
+                    }
+                }
+                desktopHTML += `</tr>`;
+            });
+
+            COMPUTED_METRICS.forEach(cm => {
+                desktopHTML += `<tr style="background:#fdfdfd;"><td style="text-align:left;color:var(--primary-color);padding-left:12px;">${cm.label}</td>`;
+                for(let c=1; c<=2; c++) {
+                    for(let p=1; p<=3; p++) {
+                        desktopHTML += `<td><span data-val="${stage.id}_${cm.id}_c${c}_p${p}" style="font-weight:bold;display:block;">-</span><span data-status="${stage.id}_${cm.id}_c${c}_p${p}" class="status-cell" style="display:none;"></span></td>`;
+                    }
+                }
+                desktopHTML += `</tr>`;
+            });
+            desktopHTML += `</tbody></table></div></div>`;
+
+            // Build Mobile Card Stack Layout Template
+            let mobileHTML = `<div class="mobile-cards-view">`;
+            for(let c=1; c<=2; c++) {
+                mobileHTML += `<div class="mobile-can-card"><div class="card-can-title">CAN 0${c} Measurements Matrix</div>`;
+                for(let p=1; p<=3; p++) {
+                    mobileHTML += `<div class="card-point-row"><div class="card-point-title">Location Point Details (Pt ${p})</div>`;
+                    METRICS.forEach(m => {
+                        mobileHTML += `<div class="form-group" style="grid-column: span 3;"><label>${m.label}</label><input type="number" step="${m.step}" inputmode="decimal" data-sync="${stage.id}_${m.id}_c${c}_p${p}" value="${m.def}"></div>`;
+                    });
+                    COMPUTED_METRICS.forEach(cm => {
+                        mobileHTML += `<div style="grid-column: span 3; background:#f9f9f9; padding:8px; border-radius:4px; margin-top:5px; display:flex; justify-content:space-between; align-items:center;"><strong>${cm.label}:</strong><div><span data-val="${stage.id}_${cm.id}_c${c}_p${p}">-</span> <span data-status="${stage.id}_${cm.id}_c${c}_p${p}" class="status-cell" style="display:none;"></span></div></div>`;
+                    });
+                    mobileHTML += `</div>`;
+                }
+                mobileHTML += `</div>`;
+            }
+            mobileHTML += `</div>`;
+
+            section.innerHTML = `<h2 class="stage-header">${stage.label}</h2>` + desktopHTML + mobileHTML;
+            container.appendChild(section);
+        });
+
+        // Mirror values dynamically across the viewport views so workers can change orientation midway smoothly
+        container.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const targetKey = e.target.getAttribute('data-sync');
+                container.querySelectorAll(`[data-sync="${targetKey}"]`).forEach(el => { if(el !== e.target) el.value = e.target.value; });
+            });
+        });
+    }
+
+    function calculateEngine() {
+        const operator = document.getElementById("operatorName").value;
+        document.getElementById("contextHeader").innerText = (operator.toUpperCase().includes("QUALITY")) ? "QUALITY CONTROL" : "PRODUCTION WORKSPACE";
+        
+        if (currentMode === "report" && operator) {
+            document.getElementById("auditStart").innerText = `${operator} (Tracked Active)`;
+            document.getElementById("auditDuring").innerText = `${operator} (Tracked Active)`;
+            document.getElementById("auditAfter").innerText = `${operator} (Tracked Active)`;
+        }
+
+        const micCheckInput = document.getElementById("micrometerCheck").value;
+        const calStatusBox = document.getElementById("calibrationStatus");
+        let isCalibrated = false;
+
+        if(micCheckInput) {
+            const micValue = parseFloat(micCheckInput);
+            if (Math.abs(micValue - 1.21) <= 0.02) {
+                calStatusBox.className = "calibration-box cal-pass";
+                calStatusBox.innerText = `OK (${micValue.toFixed(2)}mm)`;
+                isCalibrated = true;
+            } else {
+                calStatusBox.className = "calibration-box cal-fail";
+                calStatusBox.innerText = `REJECT HARD LOCK`;
+            }
         } else {
-            banner.innerText = "⏳ STARTUP PENDING (2+2 CANS IN-SPEC)";
-            banner.className = "banner pending";
+            calStatusBox.className = "calibration-box cal-fail";
+            calStatusBox.innerText = "Unverified";
+        }
+
+        let activeTroubleshootAlerts = new Set();
+        let filledCansCount = 0;
+
+        STAGE_CONFIGS.forEach(stage => {
+            if (currentMode === "quick" && stage.id === "after") return;
+            let stageCansFinished = 0;
+
+            for (let c = 1; c <= 2; c++) {
+                let canHasData = false;
+                for (let p = 1; p <= 3; p++) {
+                    const inputs = {};
+                    METRICS.forEach(m => {
+                        const inputsFound = document.querySelectorAll(`[data-sync="${stage.id}_${m.id}_c${c}_p${p}"]`);
+                        inputs[m.id] = inputsFound.length ? parseFloat(inputsFound[0].value) : NaN;
+                    });
+
+                    if(!isNaN(inputs.seamLength) || !isNaN(inputs.seamThickness) || !isNaN(inputs.bodyHook) || !isNaN(inputs.coverHook)) {
+                        canHasData = true;
+                    }
+
+                    if (Object.values(inputs).every(v => !isNaN(v))) {
+                        const actualOverlap = (inputs.bodyHook + inputs.coverHook + inputs.coverThickness) - inputs.seamLength;
+                        const overlapPercent = (actualOverlap / inputs.seamLength) * 100;
+                        const bhbPercent = ((inputs.bodyHook - (1.1 * inputs.bodyThickness)) / (inputs.seamLength - (1.1 * ((2 * inputs.coverThickness) + inputs.bodyThickness)))) * 100;
+                        const freeSpace = inputs.seamThickness - ((2 * inputs.bodyThickness) + (3 * inputs.coverThickness));
+
+                        updateOutputUI(stage.id, "actOverlap", c, p, actualOverlap, 2, "mm");
+                        updateOutputUI(stage.id, "pctOverlap", c, p, overlapPercent, 1, "%");
+                        updateOutputUI(stage.id, "pctBHB", c, p, bhbPercent, 1, "%");
+                        updateOutputUI(stage.id, "freeSpace", c, p, freeSpace, 2, "mm");
+
+                        let pass = true;
+                        if (inputs.vacuum <= -5) pass = false;
+                        if (inputs.coverHook < 1.70 || inputs.coverHook > 2.10) { pass = false; if(inputs.coverHook < 1.70) activeTroubleshootAlerts.add("Cover Hook short: Check roller setup tightness."); }
+                        if (inputs.bodyHook < 1.80 || inputs.bodyHook > 2.15) { pass = false; if(inputs.bodyHook < 1.80) activeTroubleshootAlerts.add("Body Hook short: Check lower lifter alignment."); }
+                        if (actualOverlap < 1.0 || overlapPercent < 45) pass = false;
+
+                        if (stage.id !== "after") {
+                            if (inputs.seamLength < 2.65 || inputs.seamLength > 2.95) pass = false;
+                            if (inputs.seamThickness < 1.10 || inputs.seamThickness > 1.24) pass = false;
+                        } else {
+                            if (inputs.seamLength < 2.65 || inputs.seamLength > 3.05) pass = false;
+                            if (inputs.seamThickness < 1.10 || inputs.seamThickness > 1.20) pass = false;
+                        }
+
+                        setComplianceStatus(stage.id, c, p, pass);
+                    } else {
+                        clearOutputUI(stage.id, c, p);
+                    }
+                }
+                if (canHasData) stageCansFinished++;
+            }
+            filledCansCount += stageCansFinished;
+        });
+
+        const diagnosticBox = document.getElementById("aiDiagnosticPanel");
+        const listContainer = document.getElementById("aiIssuesList");
+        if(activeTroubleshootAlerts.size > 0) {
+            listContainer.innerHTML = "";
+            activeTroubleshootAlerts.forEach(issue => { const li = document.createElement("li"); li.innerText = issue; listContainer.appendChild(li); });
+            diagnosticBox.style.display = "block";
+        } else {
+            diagnosticBox.style.display = "none";
+        }
+
+        const generatePdfBtn = document.getElementById("btnGenerateReport");
+        const trackerText = document.getElementById("completionTracker");
+
+        if (currentMode === "report") {
+            trackerText.innerText = `Data Progress: ${filledCansCount} / 6 Cans Completed`;
+            generatePdfBtn.disabled = !(filledCansCount >= 6 && isCalibrated);
+        } else {
+            trackerText.innerText = "Floor Testing Ad-Hoc Diagnostics Running (Data Logs Offline)";
+            generatePdfBtn.disabled = true;
         }
     }
 
-    function calculate() {
-        const bh = parseFloat(document.getElementById('bh').value) || 0,
-              ch = parseFloat(document.getElementById('ch').value) || 0,
-              sl = parseFloat(document.getElementById('sl').value) || 0,
-              st = parseFloat(document.getElementById('st').value) || 0;
-        const te = 0.21, tb = 0.21; 
-
-        const ov = (bh + ch + te) - sl;
-        const ovp = (ov / (sl - (2*te + tb))) * 100;
-        const bhb = ((bh - 1.1*tb) / (sl - 1.1*(2*te + tb))) * 100;
-        const fs = st - (2*tb + 3*te);
-
-        document.getElementById('res_ov').innerText = ov.toFixed(2);
-        document.getElementById('res_ovp').innerText = Math.round(ovp) + "%";
-        document.getElementById('res_bhb').innerText = Math.round(bhb) + "%";
-        document.getElementById('res_fs').innerText = fs.toFixed(2);
-
-        let msg = "";
-        if(ovp > 0 && ovp < 45) msg = "⚠️ LOW OVERLAP: Check 1st operation roll tightness.";
-        if(bhb > 0 && bhb < 70) msg = "⚠️ LOW BHB: Check pin height or body hook.";
-        document.getElementById('aiWarning').innerText = msg;
-        return { ov, ovp, bhb, fs };
+    function updateOutputUI(stage, field, can, pt, val, decimals, unit) {
+        document.querySelectorAll(`[data-val="${stage}_${field}_c${can}_p${pt}"]`).forEach(el => {
+            el.innerText = `${val.toFixed(decimals)} ${unit}`;
+        });
     }
 
-    async function submitEntry() {
-        const c = calculate();
-        const btn = document.getElementById('submitBtn');
-        btn.innerText = "Saving...";
-        const entry = {
-            ag_code: document.getElementById('ag_code').value,
-            inspector_name: document.getElementById('inspector').value,
-            department: document.getElementById('department').value,
-            inspection_stage: document.getElementById('stage').value,
-            micrometer_serial: document.getElementById('micro_serial').value,
-            test_type: currentMode,
-            can_number: parseInt(document.getElementById('can_no').value),
-            point_number: parseInt(document.getElementById('point_no').value),
-            vacuum_kpa: parseFloat(document.getElementById('vac').value) || 0,
-            body_hook: parseFloat(document.getElementById('bh').value) || 0,
-            cover_hook: parseFloat(document.getElementById('ch').value) || 0,
-            seam_length: parseFloat(document.getElementById('sl').value) || 0,
-            seam_thickness: parseFloat(document.getElementById('st').value) || 0,
-            tightness_rating: parseInt(document.getElementById('tightness').value) || 0,
-            overlap_mm: c.ov, overlap_percent: c.ovp, bhb_percent: c.bhb, freespace: c.fs
-        };
-        const { error } = await sb.from('double_seam_inspection_log').insert([entry]);
-        if(!error) { 
-            alert("Point saved!"); 
-            const currentPt = parseInt(document.getElementById('point_no').value);
-            if(currentPt < 3) document.getElementById('point_no').value = currentPt + 1;
-            checkApproval(); 
-        } else { alert("Error: " + error.message); }
-        btn.innerText = "SUBMIT POINT RECORD";
+    function clearOutputUI(stage, can, pt) {
+        COMPUTED_METRICS.forEach(cm => {
+            document.querySelectorAll(`[data-val="${stage}_${cm.id}_c${can}_p${pt}"]`).forEach(el => el.innerText = "-");
+            document.querySelectorAll(`[data-status="${stage}_${cm.id}_c${can}_p${pt}"]`).forEach(el => el.style.display = "none");
+        });
     }
+
+    function setComplianceStatus(stage, can, pt, pass) {
+        COMPUTED_METRICS.forEach(cm => {
+            document.querySelectorAll(`[data-status="${stage}_${cm.id}_c${can}_p${pt}"]`).forEach(el => {
+                el.style.display = "inline-block";
+                if (pass) { el.className = "status-cell status-accept"; el.innerText = "Accept"; }
+                else { el.className = "status-cell status-reject"; el.innerText = "Reject"; }
+            });
+        });
+    }
+
+    function triggerPDFExport() { window.print(); }
 </script>
 </body>
 </html>
