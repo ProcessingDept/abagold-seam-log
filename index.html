@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Double seam inspection log - Fixed Spec Version</title>
+    <title>Double seam inspection log - Official Specs</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, sans-serif; background: #f4f7f6; padding: 10px; }
@@ -19,7 +19,6 @@
         input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
         .calc-grid { background: #f8f9fa; padding: 15px; border-radius: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; border: 1px solid #ddd; }
         .calc-val { font-weight: bold; color: #007bff; display: block; font-size: 1.2rem; }
-        .troubleshoot { color: #dc3545; font-size: 0.85rem; font-weight: bold; min-height: 1.2em; }
         button#submitBtn { background: #28a745; color: white; padding: 16px; border: none; border-radius: 8px; width: 100%; font-weight: bold; font-size: 1.1rem; margin-top: 15px; cursor: pointer; }
     </style>
 </head>
@@ -51,9 +50,6 @@
             <option value="During production">During production</option>
             <option value="After production">After production</option>
         </select>
-        
-        <label>INSPECTOR NAME *</label>
-        <input type="text" id="inspector">
 
         <label>MICROMETER SERIAL #</label>
         <input type="text" id="micro_serial">
@@ -69,7 +65,6 @@
         <div style="flex:1;"><label>POINT (1-3)</label><select id="point_no"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
     </div>
 
-    <!-- Vacuum Section: Toggled by Quick Test Mode -->
     <div id="vacuumRow">
         <label>VACUUM KPa <span class="spec-label">(> -5 KPa)</span></label>
         <input type="number" id="vac" step="0.1">
@@ -81,7 +76,6 @@
     <label>COVER HOOK <span class="spec-label">(1.70 - 2.10 mm)</span></label>
     <input type="number" id="ch" step="0.01" oninput="calculate()">
 
-    <!-- Static Labels for Seam Specs -->
     <label>SEAM LENGTH <span class="spec-label">(2.65 - 3.05 mm External)</span></label>
     <input type="number" id="sl" step="0.01" oninput="calculate()">
 
@@ -91,14 +85,16 @@
     <label>TIGHTNESS RATING <span class="spec-label">(70 - 100%)</span></label>
     <input type="number" id="tightness">
 
+    <!-- Calculation Grid with Static Specifications next to Labels -->
     <div class="calc-grid">
-        <div>Overlap (mm) <span class="spec-label">(1.0mm Min)</span><span id="res_ov" class="calc-val">0.00</span></div>
+        <div>Actual Overlap (mm) <span class="spec-label">(1.0mm Min)</span><span id="res_ov" class="calc-val">0.00</span></div>
         <div>Overlap % <span class="spec-label">(Min 45%)</span><span id="res_ovp" class="calc-val">0%</span></div>
         <div>B.H.B. % <span class="spec-label">(70 - 90%)</span><span id="res_bhb" class="calc-val">0%</span></div>
-        <div>Free Space <span class="spec-label">(0.03 - 0.19)</span><span id="res_fs" class="calc-val">0.00</span></div>
+        <div>Free Space <span class="spec-label">(Ext: 0.03-0.19 | Int: 0.06-0.17)</span><span id="res_fs" class="calc-val">0.00</span></div>
     </div>
 
-    <div id="aiWarning" class="troubleshoot"></div>
+    <label>INSPECTED BY (SIGNATURE) *</label>
+    <input type="text" id="inspector">
 
     <button id="submitBtn" onclick="submitEntry()">SUBMIT POINT RECORD</button>
 </div>
@@ -109,13 +105,8 @@
 
     function setMode(m) {
         currentAppMode = m;
-        const meta = document.getElementById('metaSection');
-        const vacuum = document.getElementById('vacuumRow');
-        
-        // Quick Test Logic: Hide Metadata AND Vacuum
-        meta.style.display = (m === 'Quick') ? 'none' : 'block';
-        vacuum.style.display = (m === 'Quick') ? 'none' : 'block';
-        
+        document.getElementById('metaSection').style.display = (m === 'Quick') ? 'none' : 'block';
+        document.getElementById('vacuumRow').style.display = (m === 'Quick') ? 'none' : 'block';
         document.getElementById('modeReport').classList.toggle('active', m === 'Report');
         document.getElementById('modeQuick').classList.toggle('active', m === 'Quick');
     }
@@ -124,9 +115,7 @@
         const code = document.getElementById('ag_code').value;
         if(code.length < 3) return;
         const { data } = await sb.from('ag_code_master').select('*').eq('ag_code', code).single();
-        if(data) {
-            document.getElementById('autoPopInfo').innerText = `Size: ${data.can_size} | Cans: ${data.can_pallet_code} | Lids: ${data.end_pallet_code}`;
-        }
+        if(data) document.getElementById('autoPopInfo').innerText = `Size: ${data.can_size} | Cans: ${data.can_pallet_code}`;
         checkApproval();
     }
 
@@ -139,7 +128,7 @@
             banner.innerText = "✅ APPROVED FOR CLOSING";
             banner.className = "banner approved";
         } else {
-            banner.innerText = "⏳ STARTUP PENDING (2+2 CANS IN-SPEC)";
+            banner.innerText = "⏳ STARTUP PENDING (2+2 CANS)";
             banner.className = "banner pending";
         }
     }
@@ -149,22 +138,15 @@
               ch = parseFloat(document.getElementById('ch').value) || 0,
               sl = parseFloat(document.getElementById('sl').value) || 0,
               st = parseFloat(document.getElementById('st').value) || 0;
-        const te = 0.21, tb = 0.21; 
-
+        const te = 0.21, tb = 0.21;
         const ov = (bh + ch + te) - sl;
         const ovp = (ov / (sl - (2*te + tb))) * 100;
         const bhb = ((bh - 1.1*tb) / (sl - 1.1*(2*te + tb))) * 100;
         const fs = st - (2*tb + 3*te);
-
         document.getElementById('res_ov').innerText = ov.toFixed(2);
         document.getElementById('res_ovp').innerText = Math.round(ovp) + "%";
         document.getElementById('res_bhb').innerText = Math.round(bhb) + "%";
         document.getElementById('res_fs').innerText = fs.toFixed(2);
-
-        let msg = "";
-        if(ovp > 0 && ovp < 45) msg = "⚠️ LOW OVERLAP: Check 1st operation roll tightness.";
-        if(bhb > 0 && bhb < 70) msg = "⚠️ LOW BHB: Check pin height or body hook.";
-        document.getElementById('aiWarning').innerText = msg;
         return { ov, ovp, bhb, fs };
     }
 
@@ -172,13 +154,11 @@
         const c = calculate();
         const btn = document.getElementById('submitBtn');
         btn.innerText = "Saving...";
-        
         const entry = {
             ag_code: document.getElementById('ag_code').value,
             inspector_name: document.getElementById('inspector').value,
             department: document.getElementById('department').value,
             inspection_stage: document.getElementById('stage').value,
-            micrometer_serial: document.getElementById('micro_serial').value,
             test_type: currentAppMode,
             can_number: parseInt(document.getElementById('can_no').value),
             point_number: parseInt(document.getElementById('point_no').value),
@@ -187,21 +167,12 @@
             cover_hook: parseFloat(document.getElementById('ch').value) || 0,
             seam_length: parseFloat(document.getElementById('sl').value) || 0,
             seam_thickness: parseFloat(document.getElementById('st').value) || 0,
-            overlap_percent: c.ovp, 
-            bhb_percent: c.bhb, 
-            freespace: c.fs
+            overlap_percent: c.ovp, bhb_percent: c.bhb, freespace: c.fs
         };
-
         const { error } = await sb.from('double_seam_inspection_log').insert([entry]);
-        if(!error) { 
-            alert("Point saved!"); 
-            const pt = parseInt(document.getElementById('point_no').value);
-            if(pt < 3) document.getElementById('point_no').value = pt + 1;
-            checkApproval(); 
-        } else { alert("Error: " + error.message); }
+        if(!error) { alert("Point saved!"); checkApproval(); } else { alert("Error: " + error.message); }
         btn.innerText = "SUBMIT POINT RECORD";
     }
 </script>
 </body>
 </html>
-Applied Adjustments:
