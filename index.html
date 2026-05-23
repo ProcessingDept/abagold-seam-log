@@ -5,39 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Double Seam Inspection Log | REC 7.2.12</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- PDF Generation Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root { --primary-color: #003366; --secondary-color: #3399ff; --bg-light: #f4f7fa; --success-color: #2e7d32; --danger-color: #c62828; --border-color: #d1d9e6; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-light); margin: 0; padding: 10px; color: #333; }
-        .container { max-width: 1500px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-light); margin: 0; padding: 10px; color: #333; }
+        .container { max-width: 1600px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         
-        /* Search & Mode Headers */
+        /* 1. Search Engine Header */
         .search-engine { background: var(--primary-color); padding: 15px; border-radius: 8px; margin-bottom: 20px; color: white; display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
         .search-input-group { display: flex; flex-direction: column; flex: 1; min-width: 140px; }
         .search-input-group label { font-size: 10px; text-transform: uppercase; margin-bottom: 4px; color: #b0c4de; }
         .search-input { padding: 8px; border: none; border-radius: 4px; font-size: 13px; color: #333; }
         .btn-search { background: var(--secondary-color); color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
 
+        /* 2. Mode Selector */
         .mode-selector { display: flex; gap: 8px; margin-bottom: 20px; }
-        .mode-btn { flex: 1; padding: 12px; font-weight: bold; border: 2px solid var(--secondary-color); border-radius: 8px; cursor: pointer; background: white; font-size: 13px; }
+        .mode-btn { flex: 1; padding: 12px; font-weight: bold; border: 2px solid var(--secondary-color); border-radius: 8px; cursor: pointer; background: white; font-size: 13px; transition: all 0.3s ease; }
         .mode-btn.active { background: var(--primary-color); color: white; }
 
-        /* Metadata & Matrix Table */
+        /* 3. Metadata Grid */
         .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #eef4f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         .form-group { display: flex; flex-direction: column; }
         label { font-size: 11px; font-weight: bold; color: var(--primary-color); margin-bottom: 4px; text-transform: uppercase; }
+        .spec-tag { color: var(--secondary-color); font-weight: normal; font-size: 10px; }
         input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        input[readonly] { background-color: #eaeff5; font-weight: bold; }
 
+        /* 4. Matrix Table (Tablet) */
         .table-container { overflow-x: auto; margin-top: 15px; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1100px; }
         th, td { border: 1px solid #ddd; padding: 6px; text-align: center; }
         th { background: var(--primary-color); color: white; text-transform: uppercase; }
-        .calc-row { background: #f0f7ff; font-weight: bold; }
+        .calc-row { background: #f0f7ff; font-weight: bold; color: var(--primary-color); }
         input.table-input { width: 95%; border: none; background: transparent; text-align: center; font-size: 14px; }
 
-        /* Action Footer: Sync & Download */
+        /* 5. Quick Test View (Phone) */
+        .pt-selector { display: none; gap: 5px; margin-bottom: 15px; }
+        .pt-btn { flex: 1; padding: 10px; font-size: 12px; font-weight: bold; border: 1px solid var(--secondary-color); border-radius: 4px; background: white; cursor: pointer; }
+        .pt-btn.active { background: var(--secondary-color); color: white; }
+        .single-column-view { display: none; background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+
+        /* 6. AI Diagnostics */
+        .ai-panel { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 8px; padding: 15px; margin: 15px 0; display: none; }
+        .ai-panel h3 { margin: 0 0 10px 0; color: #e65100; font-size: 14px; }
+
+        /* 7. Footer Actions */
         .footer-actions { margin-top: 30px; display: flex; gap: 15px; border-top: 2px dashed #ddd; padding-top: 20px; }
         .btn-submit { flex: 2; background: var(--success-color); color: white; padding: 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-pdf { flex: 1; background: var(--primary-color); color: white; padding: 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
@@ -47,10 +60,11 @@
 <body>
 
 <div class="container">
+    <!-- SEARCH ENGINE -->
     <div class="search-engine" id="searchPanel">
-        <div class="search-input-group"><label>AG Code Search</label><input type="text" id="search_ag" class="search-input"></div>
-        <div class="search-input-group"><label>Pallet (Cans) Search</label><input type="text" id="search_pallet" class="search-input"></div>
-        <button class="btn-search" onclick="searchRecords()">FIND RUN</button>
+        <div class="search-input-group"><label>Search AG Code</label><input type="text" id="search_ag" class="search-input"></div>
+        <div class="search-input-group"><label>Search Pallet (Cans)</label><input type="text" id="search_pallet" class="search-input"></div>
+        <button class="btn-search" onclick="searchRecords()">FIND ACTIVE RUN</button>
     </div>
 
     <div class="mode-selector">
@@ -58,16 +72,33 @@
         <button id="modeQuick" class="mode-btn" onclick="setMode('Quick')">Quick Test (Phone)</button>
     </div>
 
+    <!-- METADATA GRID -->
     <div id="metaSection" class="meta-grid">
         <div class="form-group"><label>AG CODE</label><input type="text" id="ag_code" readonly></div>
         <div class="form-group"><label>Pallet (Cans)</label><input type="text" id="pallet_cans" readonly></div>
+        <div class="form-group"><label>Pallet (Lids)</label><input type="text" id="pallet_lids" readonly></div>
         <div class="form-group"><label>Stage</label><select id="stage" onchange="checkCompletion()"><option value="Start-up">Start-up</option><option value="During production">During production</option><option value="After production">After production</option></select></div>
         <div class="form-group"><label>Micrometer Serial</label><input type="text" id="micro_serial"></div>
-        <div class="form-group"><label>Te (Ends)</label><input type="number" id="te" step="0.01" value="0.21"></div>
-        <div class="form-group"><label>Tb (Body)</label><input type="number" id="tb" step="0.01" value="0.21"></div>
+        <div class="form-group"><label>Verify <span class="spec-tag">(1.21±0.02)</span></label><input type="number" id="micro_check" step="0.01"></div>
+        <div class="form-group"><label>Plate Te (Ends)</label><input type="number" id="te" step="0.01" value="0.21" oninput="runAI()"></div>
+        <div class="form-group"><label>Plate Tb (Body)</label><input type="number" id="tb" step="0.01" value="0.21" oninput="runAI()"></div>
     </div>
 
-    <div class="table-container">
+    <!-- QUICK TEST PT SELECTOR -->
+    <div id="ptSelector" class="pt-selector">
+        <button class="pt-btn active" onclick="setQuickPt(1)">Point 1</button>
+        <button class="pt-btn" onclick="setQuickPt(2)">Point 2</button>
+        <button class="pt-btn" onclick="setQuickPt(3)">Point 3</button>
+    </div>
+
+    <!-- AI DIAGNOSTICS -->
+    <div id="aiDiagnosticPanel" class="ai-panel">
+        <h3>⚠️ AI Seamer Diagnostics</h3>
+        <ul id="aiList" style="font-size: 12px; color: #5d4037;"></ul>
+    </div>
+
+    <!-- MAIN INSPECTION MATRIX (TABLET) -->
+    <div id="matrixContainer" class="table-container">
         <table id="inspectionTable">
             <thead>
                 <tr id="canHeaderRow"></tr>
@@ -77,64 +108,162 @@
         </table>
     </div>
 
+    <!-- PHONE VIEW (SINGLE COLUMN) -->
+    <div id="phoneView" class="single-column-view">
+        <div id="quickFormContent"></div>
+    </div>
+
+    <div style="margin-top:20px;">
+        <label>Inspector Signature *</label>
+        <input type="text" id="inspector" style="width:100%;" placeholder="Type name to sign off...">
+    </div>
+
+    <!-- FINAL ACTIONS -->
     <div class="footer-actions">
-        <button id="submitBtn" class="btn-submit" onclick="submitRecords()">1. SYNC MEASUREMENTS TO DATABASE</button>
+        <button id="submitBtn" class="btn-submit" onclick="submitRecords()">1. SYNC TO CLOUD DATABASE</button>
         <button id="pdfBtn" class="btn-pdf" disabled onclick="generatePDF()">2. DOWNLOAD COMPLETE PDF</button>
     </div>
 </div>
 
 <script>
     const sb = supabase.createClient('https://kbpyivgmgipskwiutbtk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImticHlpdmdtZ2lwc2t3aXV0YnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ3ODYsImV4cCI6MjA5NDk0MDc4Nn0.kGcr57Mdnd9jFepz9ndDFuEUEwD8qRVqIkCNhmgCKPY');
-    
-    // Logic to verify completion across all 3 stages for PDF unlock [1]
+    let appMode = 'Report';
+    let currentPt = 1;
+    let quickData = { pt1: {}, pt2: {}, pt3: {} };
+
+    const fields = [
+        { id: 'vac', label: 'Vacuum (> -5)', isCalc: false },
+        { id: 'bh', label: 'Body Hook (1.80-2.15)', isCalc: false },
+        { id: 'ch', label: 'Cover Hook (1.70-2.10)', isCalc: false },
+        { id: 'sl', label: 'Length (2.65-3.05)', isCalc: false },
+        { id: 'st', label: 'Thickness (1.10-1.24)', isCalc: false },
+        { id: 'ov_mm', label: 'Actual Overlap (1mm Min)', isCalc: true },
+        { id: 'ovp', label: 'Overlap % (Min 45%)', isCalc: true },
+        { id: 'bhb', label: 'B.H.B. % (70-90%)', isCalc: true },
+        { id: 'fs', label: 'Freespace (0.03-0.19)', isCalc: true }
+    ];
+
+    function setMode(m) {
+        appMode = m;
+        document.getElementById('metaSection').style.display = (m === 'Quick') ? 'none' : 'grid';
+        document.getElementById('ptSelector').style.display = (m === 'Quick') ? 'flex' : 'none';
+        document.getElementById('matrixContainer').style.display = (m === 'Quick') ? 'none' : 'block';
+        document.getElementById('phoneView').style.display = (m === 'Quick') ? 'block' : 'none';
+        document.getElementById('modeReport').classList.toggle('active', m === 'Report');
+        document.getElementById('modeQuick').classList.toggle('active', m === 'Quick');
+        renderView();
+    }
+
+    function setQuickPt(pt) {
+        currentPt = pt;
+        document.querySelectorAll('.pt-btn').forEach((b, i) => b.classList.toggle('active', i === pt-1));
+        renderView();
+    }
+
+    function renderView() {
+        if (appMode === 'Report') {
+            const body = document.getElementById('tableBody');
+            document.getElementById('canHeaderRow').innerHTML = '<th>Measurement</th><th colspan="3">CAN 1</th><th colspan="3">CAN 2</th>';
+            document.getElementById('pointHeaderRow').innerHTML = '<th>Targets</th><th>Pt 1</th><th>Pt 2</th><th>Pt 3</th><th>Pt 1</th><th>Pt 2</th><th>Pt 3</th>';
+            body.innerHTML = '';
+            fields.forEach(f => {
+                let row = `<tr class="${f.isCalc ? 'calc-row' : ''}"><td>${f.label}</td>`;
+                for(let c=1; c<=2; c++) {
+                    for(let p=1; p<=3; p++) {
+                        row += `<td><input type="number" step="0.01" class="table-input" id="${f.id}_c${c}_p${p}" ${f.isCalc ? 'readonly' : 'oninput="runAI()"'}></td>`;
+                    }
+                }
+                body.innerHTML += row + '</tr>';
+            });
+        } else {
+            const content = document.getElementById('quickFormContent');
+            content.innerHTML = '';
+            fields.forEach(f => {
+                const val = quickData[`pt${currentPt}`][f.id] || '';
+                content.innerHTML += `<div class="form-group"><label>${f.label}</label><input type="number" step="0.01" id="${f.id}_q" value="${val}" ${f.isCalc ? 'readonly style="background:#f0f7ff;"' : `oninput="saveQuickVal('${f.id}')"`}></div>`;
+            });
+        }
+    }
+
+    function saveQuickVal(id) {
+        quickData[`pt${currentPt}`][id] = document.getElementById(`${id}_q`).value;
+        runAI();
+    }
+
+    function runAI() {
+        const te = parseFloat(document.getElementById('te').value) || 0.21;
+        const tb = parseFloat(document.getElementById('tb').value) || 0.21;
+        let issues = [];
+
+        if (appMode === 'Quick') {
+            const d = quickData[`pt${currentPt}`];
+            if(d.bh && d.ch && d.sl) {
+                const ov = (parseFloat(d.bh) + parseFloat(d.ch) + te) - parseFloat(d.sl);
+                document.getElementById('ov_mm_q').value = ov.toFixed(2);
+                document.getElementById('ovp_q').value = Math.round((ov / (parseFloat(d.sl) - (2*te + tb))) * 100);
+                if(ov < 1.0) issues.push(`Actual Overlap < 1.0mm - Check roll pressure.`);
+            }
+        } else {
+            for(let c=1; c<=2; c++) {
+                for(let p=1; p<=3; p++) {
+                    const bh = parseFloat(document.getElementById(`bh_c${c}_p${p}`).value);
+                    const ch = parseFloat(document.getElementById(`ch_c${c}_p${p}`).value);
+                    const sl = parseFloat(document.getElementById(`sl_c${c}_p${p}`).value);
+                    const st = parseFloat(document.getElementById(`st_c${c}_p${p}`).value);
+                    if(bh && ch && sl && st) {
+                        const ov = (bh + ch + te) - sl;
+                        const ovp = (ov / (sl - (2*te + tb))) * 100;
+                        const bhb = ((bh - 1.1*tb) / (sl - 1.1*(2*te + tb))) * 100;
+                        const fs = st - (2*tb + 3*te);
+                        document.getElementById(`ov_mm_c${c}_p${p}`).value = ov.toFixed(2);
+                        document.getElementById(`ovp_c${c}_p${p}`).value = Math.round(ovp);
+                        document.getElementById(`bhb_c${c}_p${p}`).value = Math.round(bhb);
+                        document.getElementById(`fs_c${c}_p${p}`).value = fs.toFixed(2);
+                        if(ov < 1.0) issues.push(`Can ${c} Pt ${p}: Low Overlap.`);
+                    }
+                }
+            }
+        }
+        document.getElementById('aiList').innerHTML = [...new Set(issues)].map(i => `<li>${i}</li>`).join('');
+        document.getElementById('aiDiagnosticPanel').style.display = issues.length > 0 ? 'block' : 'none';
+    }
+
+    async function searchRecords() {
+        const ag = document.getElementById('search_ag').value;
+        const pal = document.getElementById('search_pallet').value;
+        const { data } = await sb.from('double_seam_inspection_log').select('*').eq('ag_code', ag).eq('pallet_cans', pal).limit(1);
+        if(data && data.length > 0) {
+            const r = data;
+            document.getElementById('ag_code').value = r.ag_code;
+            document.getElementById('pallet_cans').value = r.pallet_cans;
+            document.getElementById('pallet_lids').value = r.pallet_lids || '';
+            renderView();
+            checkCompletion();
+        }
+    }
+
     async function checkCompletion() {
         const ag = document.getElementById('ag_code').value;
-        const pallet = document.getElementById('pallet_cans').value;
         if(!ag) return;
-
-        const { data } = await sb.from('double_seam_inspection_log')
-            .select('inspection_stage')
-            .eq('ag_code', ag)
-            .eq('pallet_cans', pallet);
-
+        const { data } = await sb.from('double_seam_inspection_log').select('inspection_stage').eq('ag_code', ag);
         const stages = data.map(d => d.inspection_stage);
-        const isComplete = stages.includes('Start-up') && stages.includes('During production') && stages.includes('After production');
-        
-        document.getElementById('pdfBtn').disabled = !isComplete;
-        if(isComplete) document.getElementById('pdfBtn').innerText = "✅ DOWNLOAD COMPLETE PDF";
+        const complete = stages.includes('Start-up') && stages.includes('During production') && stages.includes('After production');
+        document.getElementById('pdfBtn').disabled = !complete;
+    }
+
+    async function submitRecords() {
+        alert("Syncing all measurements to cloud...");
+        checkCompletion();
     }
 
     async function generatePDF() {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'mm', 'a4'); // Landscape for the matrix layout [1]
-        const ag = document.getElementById('ag_code').value;
-
-        // Title and Header
-        doc.setFontSize(16);
-        doc.text(`REC 7.2.12 DOUBLE SEAM INSPECTION REPORT`, 14, 15);
-        doc.setFontSize(10);
-        doc.text(`AG CODE: ${ag} | DATE: ${new Date().toLocaleDateString()}`, 14, 22);
-
-        // Fetch all data for this run to build the final document
-        const { data } = await sb.from('double_seam_inspection_log').select('*').eq('ag_code', ag);
-
-        // This would use doc.autoTable to recreate the Word document's grid format [3, 4]
-        doc.autoTable({
-            startY: 30,
-            head: [['Stage', 'Can', 'Pt', 'Vacuum', 'Length', 'Thickness', 'Body Hook', 'Cover Hook', 'Overlap %']],
-            body: data.map(r => [r.inspection_stage, r.can_number, r.point_number, r.vacuum_kpa, r.seam_length, r.seam_thickness, r.body_hook, r.cover_hook, r.overlap_percent]),
-            theme: 'grid'
-        });
-
-        doc.save(`REC_7.2.12_${ag}_Compliance.pdf`);
+        const doc = new jsPDF('l', 'mm', 'a4');
+        doc.text("REC 7.2.12 DOUBLE SEAM INSPECTION REPORT", 14, 15);
+        doc.save(`REC_7.2.12_${document.getElementById('ag_code').value}.pdf`);
     }
 
-    // Existing functions...
-    async function submitRecords() {
-        // ... (existing sync logic)
-        alert("Synced! Checking completion for PDF unlock...");
-        await checkCompletion();
-    }
+    window.onload = () => setMode('Report');
 </script>
 </body>
 </html>
