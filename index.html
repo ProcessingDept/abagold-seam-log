@@ -10,7 +10,7 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-light); margin: 0; padding: 10px; color: #333; }
         .container { max-width: 1600px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         
-        /* Triple Search Engine */
+        /* Search Engine */
         .search-engine { background: var(--primary-color); padding: 15px; border-radius: 8px; margin-bottom: 20px; color: white; display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
         .search-input-group { display: flex; flex-direction: column; flex: 1; min-width: 140px; }
         .search-input-group label { font-size: 10px; text-transform: uppercase; margin-bottom: 4px; color: #b0c4de; }
@@ -21,18 +21,16 @@
         .mode-btn { flex: 1; padding: 12px; font-weight: bold; border: 2px solid var(--secondary-color); border-radius: 8px; cursor: pointer; background: white; font-size: 13px; }
         .mode-btn.active { background: var(--primary-color); color: white; }
 
-        /* Metadata & Calculator Grid */
         .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #eef4f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         .form-group { display: flex; flex-direction: column; margin-bottom: 10px; }
         label { font-size: 11px; font-weight: bold; color: var(--primary-color); margin-bottom: 4px; text-transform: uppercase; }
         input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: white; width: 100%; box-sizing: border-box; }
 
-        /* AI Diagnostics */
+        /* AI Diagnostic Panel */
         .ai-panel { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 8px; padding: 15px; margin: 15px 0; display: none; }
         .ai-panel h3 { margin: 0 0 10px 0; color: #e65100; font-size: 14px; }
         .ai-list { margin: 0; padding-left: 20px; font-size: 12px; color: #5d4037; }
 
-        /* Spec Warnings & Calculations */
         .out-of-spec { color: var(--danger-color) !important; font-weight: bold; border: 2px solid var(--danger-color) !important; background-color: #fff0f0 !important; }
         .calc-row { background: #f0f7ff; font-weight: bold; }
 
@@ -48,7 +46,6 @@
 <body>
 
 <div class="container">
-    <!-- SEARCH ENGINE -->
     <div class="search-engine" id="searchPanel">
         <div class="search-input-group"><label>Search AG Code</label><input type="text" id="s_ag" class="search-input"></div>
         <div class="search-input-group"><label>Search Job Number</label><input type="text" id="s_job" class="search-input"></div>
@@ -73,29 +70,26 @@
                 <option value="73x111mm">73x111mm</option>
                 <option value="73x119mm">73x119mm</option>
                 <option value="99x119mm">99x119mm</option>
-                <option value="Other">Other (Manual Input)</option>
+                <option value="Other">Other</option>
             </select>
-            <input type="text" id="other_size" style="display:none; margin-top:5px;" placeholder="Enter custom size...">
+            <input type="text" id="other_size" style="display:none; margin-top:5px;" placeholder="Custom size...">
         </div>
         <div class="form-group"><label>Stage</label><select id="stage" onchange="renderView()"><option value="Start-up">Start-up</option><option value="During production">During production</option><option value="After production">After production</option></select></div>
         <div class="form-group"><label>Plate Te (Ends)</label><input type="number" id="te" step="0.001" oninput="runAI()"></div>
         <div class="form-group"><label>Plate Tb (Body)</label><input type="number" id="tb" step="0.001" oninput="runAI()"></div>
     </div>
 
-    <!-- AI DIAGNOSTICS PANEL -->
     <div id="aiDiagnosticPanel" class="ai-panel">
         <h3>⚠️ AI Seamer Diagnostics</h3>
         <ul id="aiList" class="ai-list"></ul>
     </div>
 
-    <!-- QUICK TEST CALCULATOR -->
     <div id="quickCalculator" class="quick-calculator">
         <div class="form-group"><label>Plate Te (Ends)</label><input type="number" id="te_q" step="0.001" oninput="runAI()"></div>
         <div class="form-group"><label>Plate Tb (Body)</label><input type="number" id="tb_q" step="0.001" oninput="runAI()"></div>
         <div id="quickFields"></div>
     </div>
 
-    <!-- MAIN INSPECTION TABLE -->
     <div id="matrixContainer" class="table-container">
         <table id="inspectionTable">
             <thead>
@@ -109,7 +103,7 @@
     <div id="footerActions" style="margin-top:20px;">
         <div id="inspectorGroup" style="margin-bottom:20px;">
             <label style="font-size: 11px; font-weight: bold; color: var(--primary-color);">Inspector Signature *</label>
-            <input type="text" id="inspector" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;" placeholder="Sign off here...">
+            <input type="text" id="inspector" style="width:100%;" placeholder="Sign off here...">
         </div>
         <button class="btn-submit" style="background:#2e7d32; color:white; padding:15px; border:none; border-radius:6px; width:100%; font-weight:bold; cursor:pointer;" onclick="submitRecords()">SYNC DATA TO CLOUD</button>
     </div>
@@ -119,17 +113,17 @@
     const sb = supabase.createClient('https://kbpyivgmgipskwiutbtk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImticHlpdmdtZ2lwc2t3aXV0YnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ3ODYsImV4cCI6MjA5NDk0MDc4Nn0.kGcr57Mdnd9jFepz9ndDFuEUEwD8qRVqIkCNhmgCKPY');
     let currentMode = 'Report';
     
-    // Correct Order: Seam Length, Thickness, Body Hook, Cover Hook, Tightness
+    // Order: Seam Length, Thickness, Body Hook, Cover Hook, Tightness
     const fields = [
         { id: 'vac', label: 'Vacuum (>-5 KPa)', isCalc: false, min: -5 },
-        { id: 'sl', label: 'Seam Length (2.65-3.05)', isCalc: false, min: 2.65, max: 2.95 },
-        { id: 'st', label: 'Seam Thickness', isCalc: false, min: 1.10, max: 1.24 },
+        { id: 'sl', label: 'Seam Length (2.65-3.05)', isCalc: false, min: 2.65, max: 3.05 },
+        { id: 'st', label: 'Seam Thickness (1.10-1.20)', isCalc: false, min: 1.10, max: 1.20 },
         { id: 'bh', label: 'Body Hook (1.80-2.15)', isCalc: false, min: 1.80, max: 2.15 },
         { id: 'ch', label: 'Cover Hook (1.70-2.10)', isCalc: false, min: 1.70, max: 2.10 },
         { id: 'tightness', label: 'Tightness Rating (70-100%)', isCalc: false, min: 70, max: 100 },
         { id: 'ov_mm', label: 'Actual Overlap (1mm Min)', isCalc: true, min: 1.0 },
         { id: 'ovp', label: 'Overlap % (Min 45%)', isCalc: true, min: 45 },
-        { id: 'bhb', label: 'B.H.B. % (70-90%)', isCalc: true, min: 70, max: 90 },
+        { id: 'bhb', label: 'B.H.B. % (70% Min)', isCalc: true, min: 70 },
         { id: 'fs', label: 'Free Space (0.03-0.19)', isCalc: true, min: 0.03, max: 0.19 }
     ];
 
@@ -179,38 +173,47 @@
     function runAI() {
         const te = parseFloat(document.getElementById(currentMode === 'Quick' ? 'te_q' : 'te').value) || 0;
         const tb = parseFloat(document.getElementById(currentMode === 'Quick' ? 'tb_q' : 'tb').value) || 0;
-        const stage = currentMode === 'Quick' ? 'Start-up' : document.getElementById('stage').value;
         let issues = [];
+
+        // GLOBAL SPECS (AFTER-PRODUCTION LIMITS FOR ALL STAGES)
+        const slMax = 3.05;
+        const stMax = 1.20;
 
         function processPoint(suffix, prefix) {
             const bh = parseFloat(document.getElementById(`bh${suffix}`).value) || 0;
             const ch = parseFloat(document.getElementById(`ch${suffix}`).value) || 0;
             const sl = parseFloat(document.getElementById(`sl${suffix}`).value) || 0;
             const st = parseFloat(document.getElementById(`st${suffix}`).value) || 0;
+            const tgn = parseFloat(document.getElementById(`tightness${suffix}`).value) || 0;
 
-            // CORRECTED OVERLAP CALCULATIONS [Source 155]
-            if(bh && ch && sl && te) {
-                const ov = (bh + ch + te) - sl;
-                const ovp = (ov / sl) * 100;
-                updateField(`ov_mm${suffix}`, ov.toFixed(2), ov >= 1.0);
-                updateField(`ovp${suffix}`, Math.round(ovp), ovp >= 45);
-                if(ov < 1.0) issues.push(`${prefix}Low Overlap. Check 1st op roll tightness.`);
+            // OVERLAP CALCULATIONS - SEAM SCHOOL COMPATIBLE
+            if(bh && ch && sl && te && tb) {
+                const actualOverlap = (bh + ch + te) - sl;
+                // High-precision denominator to match Seam School
+                const overlapSpace = sl - (2 * te + tb);
+                const overlapPct = (actualOverlap / overlapSpace) * 100;
+
+                updateField(`ov_mm${suffix}`, actualOverlap.toFixed(2), actualOverlap >= 1.0);
+                updateField(`ovp${suffix}`, Math.round(overlapPct), overlapPct >= 45);
+                
+                if(actualOverlap < 1.0) issues.push(`${prefix}Low Overlap (<1.0mm).`);
             }
 
-            // CORRECTED BHB & FREE SPACE CALCULATIONS [Source 11, 155]
+            // BHB & FREE SPACE
             if(bh && sl && te && tb) {
                 const bhb = ((bh - (1.1 * tb)) / (sl - (1.1 * (2 * te + tb)))) * 100;
-                const bhbPass = (stage === 'After production') ? bhb >= 70 : (bhb >= 70 && bhb <= 90);
-                updateField(`bhb${suffix}`, Math.round(bhb), bhbPass);
+                updateField(`bhb${suffix}`, Math.round(bhb), bhb >= 70);
             }
             if(st && tb && te) {
                 const fs = st - (2 * tb + 3 * te);
                 updateField(`fs${suffix}`, fs.toFixed(3), fs >= 0.03 && fs <= 0.19);
-                if(fs > 0.19) issues.push(`${prefix}High Free Space. Check 2nd op pressure.`);
+                if(fs > 0.19) issues.push(`${prefix}High Free Space (>0.19). Check 2nd op pressure.`);
             }
 
-            // ADDITIONAL AI DIAGNOSTICS [Source 157]
-            if(sl > (stage === 'After production' ? 3.05 : 2.95)) issues.push(`${prefix}Seam Length High. Check profile wear.`);
+            // SPEC HIGHLIGHTING (AFTER-PROD LIMITS)
+            if(sl > 0) updateField(`sl${suffix}`, sl, sl >= 2.65 && sl <= slMax);
+            if(st > 0) updateField(`st${suffix}`, st, st >= 1.10 && st <= stMax);
+            if(sl > slMax) issues.push(`${prefix}Seam Length High. Check profile wear.`);
         }
 
         if (currentMode === 'Quick') {
@@ -228,14 +231,15 @@
     function updateField(id, val, isPass) {
         const el = document.getElementById(id);
         if(!el) return;
-        el.value = val;
+        if(typeof val === 'number') el.value = val;
         el.classList.toggle('out-of-spec', !isPass);
     }
 
-    async function searchRecords() { alert("Searching for matching runs..."); }
+    async function searchRecords() { alert("Searching records..."); }
     async function submitRecords() { alert("Syncing matrix to Supabase..."); }
 
     window.onload = () => renderView();
 </script>
 </body>
 </html>
+Why this version is correct:
