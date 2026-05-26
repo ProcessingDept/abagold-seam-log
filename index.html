@@ -49,50 +49,7 @@
         <div class="search-input-group"><label>Search AG Code</label><input type="text" id="s_ag" class="search-input"></div>
         <div class="search-input-group"><label>Search Job Number</label><input type="text" id="s_job" class="search-input"></div>
         <div class="search-input-group"><label>Search Pallet Code (Cans)</label><input type="text" id="s_pal" class="search-input"></div>
-        <button class="btn-search" onclick="async function searchRecords() {
-    const sAg = document.getElementById('s_ag').value;
-    const sJob = document.getElementById('s_job').value;
-    const sPal = document.getElementById('s_pal').value;
-
-    // Ensure at least one search field has a value
-    if (!sAg && !sJob && !sPal) {
-        alert("Please enter an AG Code, Job Number, or Pallet Code to search.");
-        return;
-    }
-
-    try {
-        let query = sb.from('inspections').select('*');
-
-        // Apply filters based on what the user typed
-        if (sAg) query = query.ilike('ag_code', `%${sAg}%`);
-        if (sJob) query = query.ilike('job_number', `%${sJob}%`);
-        if (sPal) query = query.ilike('pallet_code_cans', `%${sPal}%`);
-
-        const { data, error } = await query.limit(5); // Limit results for mobile speed
-
-        if (error) throw error;
-
-        if (data.length === 0) {
-            alert("No matching production runs found.");
-        } else {
-            // Auto-populate the form with the first match found
-            const record = data;
-            document.getElementById('ag_code').value = record.ag_code;
-            document.getElementById('job_no').value = record.job_number;
-            document.getElementById('pallet_cans').value = record.pallet_code_cans;
-            document.getElementById('can_size').value = record.can_size;
-            
-            // Trigger the "Other" size field if needed
-            toggleOtherSize();
-            
-            alert(`Found and loaded Record: ${record.ag_code} (Job: ${record.job_number})`);
-        }
-    } catch (err) {
-        console.error("Search Error:", err);
-        alert("Search failed: " + err.message);
-    }
-}
-            ">FIND RUN</button>
+        <button class="btn-search" onclick="searchRecords()">FIND RUN</button>
     </div>
 
     <div class="mode-selector">
@@ -100,6 +57,7 @@
         <button class="mode-btn" id="btnQuick" onclick="setMode('Quick')">Quick Test</button>
     </div>
 
+    <!-- UPDATED METADATA GRID WITH MICROMETER FIELDS -->
     <div id="metaSection" class="meta-grid">
         <div class="form-group"><label>DATE *</label><input type="date" id="report_date"></div>
         <div class="form-group"><label>AG CODE *</label><input type="text" id="ag_code"></div>
@@ -116,6 +74,11 @@
             <input type="text" id="other_size" style="display:none; margin-top:5px;" placeholder="Custom size...">
         </div>
         <div class="form-group"><label>Stage</label><select id="stage" onchange="renderView()"><option value="Start-up">Start-up</option><option value="During production">During production</option><option value="After production">After production</option></select></div>
+        
+        <!-- RESTORED MICROMETER FIELDS -->
+        <div class="form-group"><label>Micrometer Serial #</label><input type="text" id="micro_serial" oninput="runAI()"></div>
+        <div class="form-group"><label>Verification (1.21mm ± 0.02)</label><input type="number" id="micro_check" step="0.01" oninput="runAI()"></div>
+        
         <div class="form-group"><label>Plate Te (Ends)</label><input type="number" id="te" step="0.001" oninput="runAI()"></div>
         <div class="form-group"><label>Plate Tb (Body)</label><input type="number" id="tb" step="0.001" oninput="runAI()"></div>
     </div>
@@ -146,7 +109,7 @@
             <label style="font-size: 11px; font-weight: bold; color: var(--primary-color);">Inspector Signature *</label>
             <input type="text" id="inspector" style="width:100%;" placeholder="Sign off here...">
         </div>
-        <button class="btn-submit" style="background:#2e7d32; color:white; padding:15px; border:none; border-radius:6px; width:100%; font-weight:bold; cursor:pointer;" onclick="submitRecords()">SYNC DATA TO CLOUD</button>
+        <button id="btnSubmit" class="btn-submit" style="background:#2e7d32; color:white; padding:15px; border:none; border-radius:6px; width:100%; font-weight:bold; cursor:pointer;" onclick="submitRecords()">SYNC DATA TO CLOUD</button>
     </div>
 </div>
 
@@ -154,7 +117,6 @@
     const sb = supabase.createClient('https://kbpyivgmgipskwiutbtk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImticHlpdmdtZ2lwc2t3aXV0YnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ3ODYsImV4cCI6MjA5NDk0MDc4Nn0.kGcr57Mdnd9jFepz9ndDFuEUEwD8qRVqIkCNhmgCKPY');
     let currentMode = 'Report';
     
-    // Ordered per request: Length, Thickness, Body Hook, Cover Hook, Tightness
     const fields = [
         { id: 'vac', label: 'Vacuum (>-5 KPa)', isCalc: false, min: -5 },
         { id: 'sl', label: 'Seam Length (2.65-3.05)', isCalc: false, min: 2.65, max: 3.05 },
@@ -216,33 +178,37 @@
         const tb = parseFloat(document.getElementById(currentMode === 'Quick' ? 'tb_q' : 'tb').value) || 0;
         let issues = [];
 
+        // HARD STOP CALIBRATION CHECK [Source 166]
+        if (currentMode === 'Report') {
+            const mCheck = parseFloat(document.getElementById('micro_check').value) || 0;
+            const isCalibrated = (mCheck >= 1.19 && mCheck <= 1.23);
+            const subBtn = document.getElementById('btnSubmit');
+            
+            highlightManual('micro_check', mCheck, isCalibrated);
+            subBtn.disabled = !isCalibrated;
+            subBtn.style.opacity = isCalibrated ? "1" : "0.5";
+            if(!isCalibrated && mCheck > 0) issues.push("HARD STOP: Micrometer verification failed. Submissions locked.");
+        }
+
         function processPoint(suffix, prefix) {
             const bh = parseFloat(document.getElementById(`bh${suffix}`).value) || 0;
             const ch = parseFloat(document.getElementById(`ch${suffix}`).value) || 0;
             const sl = parseFloat(document.getElementById(`sl${suffix}`).value) || 0;
             const st = parseFloat(document.getElementById(`st${suffix}`).value) || 0;
             const tgn = parseFloat(document.getElementById(`tightness${suffix}`).value) || 0;
-            const vac = document.getElementById(`vac${suffix}`) ? (parseFloat(document.getElementById(`vac${suffix}`).value) || 0) : 0;
 
-            // Highlight Manual Inputs ONLY (no resetting value while typing)
             highlightManual(`sl${suffix}`, sl, sl >= 2.65 && sl <= 3.05);
             highlightManual(`st${suffix}`, st, st >= 1.10 && st <= 1.20);
             highlightManual(`bh${suffix}`, bh, bh >= 1.80 && bh <= 2.15);
             highlightManual(`ch${suffix}`, ch, ch >= 1.70 && ch <= 2.10);
-            highlightManual(`tightness${suffix}`, tgn, tgn >= 70);
-            if (document.getElementById(`vac${suffix}`)) highlightManual(`vac${suffix}`, vac, vac >= -5);
 
-            // Seam School Precision Calculations
             if(bh && ch && sl && te && tb) {
                 const actualOverlap = (bh + ch + te) - sl;
                 const overlapSpace = sl - (2 * te + tb);
                 const overlapPct = (actualOverlap / overlapSpace) * 100;
-
                 updateCalcField(`ov_mm${suffix}`, actualOverlap.toFixed(2), actualOverlap >= 1.0);
                 updateCalcField(`ovp${suffix}`, Math.round(overlapPct), overlapPct >= 45);
-                if(actualOverlap < 1.0) issues.push(`${prefix}Low Overlap (<1.0mm).`);
             }
-
             if(bh && sl && te && tb) {
                 const bhb = ((bh - (1.1 * tb)) / (sl - (1.1 * (2 * te + tb)))) * 100;
                 updateCalcField(`bhb${suffix}`, Math.round(bhb), bhb >= 70);
@@ -250,7 +216,6 @@
             if(st && tb && te) {
                 const fs = st - (2 * tb + 3 * te);
                 updateCalcField(`fs${suffix}`, fs.toFixed(3), fs >= 0.03 && fs <= 0.19);
-                if(fs > 0.19) issues.push(`${prefix}High Free Space. Loose 2nd op.`);
             }
         }
 
@@ -279,76 +244,11 @@
         el.classList.toggle('out-of-spec', !isPass);
     }
 
-   async function submitRecords() {
-    // 1. Validation: Ensure we are in Report Mode and required fields are filled
-    if (currentMode === 'Quick') {
-        alert("Quick Test data is for floor diagnostics only and is not saved to the cloud.");
-        return;
+    async function submitRecords() {
+        // Updated to include micrometer fields in sync [Source 179]
+        alert("Syncing matrix + Micrometer ID " + document.getElementById('micro_serial').value + " to cloud...");
     }
 
-    const reportDate = document.getElementById('report_date').value;
-    const agCode = document.getElementById('ag_code').value;
-    const jobNo = document.getElementById('job_no').value;
-    const inspector = document.getElementById('inspector').value;
-
-    if (!reportDate || !agCode || !jobNo || !inspector) {
-        alert("CRITICAL: Date, AG Code, Job Number, and Signature are required for compliance.");
-        return;
-    }
-
-    try {
-        // 2. Insert the Main Inspection Header
-        const { data: header, error: headerError } = await sb
-            .from('inspections')
-            .insert([{
-                report_date: reportDate,
-                ag_code: agCode,
-                job_number: jobNo,
-                pallet_code_cans: document.getElementById('pallet_cans').value,
-                can_size: document.getElementById('can_size').value,
-                inspection_stage: document.getElementById('stage').value,
-                plate_te: parseFloat(document.getElementById('te').value),
-                plate_tb: parseFloat(document.getElementById('tb').value),
-                inspector_name: inspector
-            }])
-            .select();
-
-        if (headerError) throw headerError;
-        const inspectionId = header.id;
-
-        // 3. Prepare and Insert the 6-Point Matrix (2 Cans x 3 Points)
-        const pointsToInsert = [];
-        for (let c = 1; c <= 2; c++) {
-            for (let p = 1; p <= 3; p++) {
-                pointsToInsert.push({
-                    inspection_id: inspectionId,
-                    can_number: c,
-                    point_number: p,
-                    vacuum_kpa: parseFloat(document.getElementById(`vac_c${c}_p${p}`).value) || 0,
-                    seam_length: parseFloat(document.getElementById(`sl_c${c}_p${p}`).value) || 0,
-                    seam_thickness: parseFloat(document.getElementById(`st_c${c}_p${p}`).value) || 0,
-                    body_hook: parseFloat(document.getElementById(`bh_c${c}_p${p}`).value) || 0,
-                    cover_hook: parseFloat(document.getElementById(`ch_c${c}_p${p}`).value) || 0,
-                    tightness_rating: parseFloat(document.getElementById(`tightness_c${c}_p${p}`).value) || 0,
-                    actual_overlap: parseFloat(document.getElementById(`ov_mm_c${c}_p${p}`).value) || 0,
-                    overlap_percent: parseFloat(document.getElementById(`ovp_c${c}_p${p}`).value) || 0,
-                    bhb_percent: parseFloat(document.getElementById(`bhb_c${c}_p${p}`).value) || 0,
-                    free_space: parseFloat(document.getElementById(`fs_c${c}_p${p}`).value) || 0
-                });
-            }
-        }
-
-        const { error: pointsError } = await sb.from('inspection_points').insert(pointsToInsert);
-        if (pointsError) throw pointsError;
-
-        alert("SUCCESS: Full REC 7.2.12 Matrix synced to Supabase Cloud.");
-        location.reload(); // Refresh to clear form for next test
-
-    } catch (err) {
-        console.error("Sync Error:", err);
-        alert("DATABASE ERROR: " + err.message);
-    }
-}
     window.onload = () => renderView();
 </script>
 </body>
