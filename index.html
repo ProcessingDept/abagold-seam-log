@@ -236,7 +236,76 @@
         el.classList.toggle('out-of-spec', !isPass);
     }
 
-    async function submitRecords() { alert("Syncing to cloud..."); }
+   async function submitRecords() {
+    // 1. Validation: Ensure we are in Report Mode and required fields are filled
+    if (currentMode === 'Quick') {
+        alert("Quick Test data is for floor diagnostics only and is not saved to the cloud.");
+        return;
+    }
+
+    const reportDate = document.getElementById('report_date').value;
+    const agCode = document.getElementById('ag_code').value;
+    const jobNo = document.getElementById('job_no').value;
+    const inspector = document.getElementById('inspector').value;
+
+    if (!reportDate || !agCode || !jobNo || !inspector) {
+        alert("CRITICAL: Date, AG Code, Job Number, and Signature are required for compliance.");
+        return;
+    }
+
+    try {
+        // 2. Insert the Main Inspection Header
+        const { data: header, error: headerError } = await sb
+            .from('inspections')
+            .insert([{
+                report_date: reportDate,
+                ag_code: agCode,
+                job_number: jobNo,
+                pallet_code_cans: document.getElementById('pallet_cans').value,
+                can_size: document.getElementById('can_size').value,
+                inspection_stage: document.getElementById('stage').value,
+                plate_te: parseFloat(document.getElementById('te').value),
+                plate_tb: parseFloat(document.getElementById('tb').value),
+                inspector_name: inspector
+            }])
+            .select();
+
+        if (headerError) throw headerError;
+        const inspectionId = header.id;
+
+        // 3. Prepare and Insert the 6-Point Matrix (2 Cans x 3 Points)
+        const pointsToInsert = [];
+        for (let c = 1; c <= 2; c++) {
+            for (let p = 1; p <= 3; p++) {
+                pointsToInsert.push({
+                    inspection_id: inspectionId,
+                    can_number: c,
+                    point_number: p,
+                    vacuum_kpa: parseFloat(document.getElementById(`vac_c${c}_p${p}`).value) || 0,
+                    seam_length: parseFloat(document.getElementById(`sl_c${c}_p${p}`).value) || 0,
+                    seam_thickness: parseFloat(document.getElementById(`st_c${c}_p${p}`).value) || 0,
+                    body_hook: parseFloat(document.getElementById(`bh_c${c}_p${p}`).value) || 0,
+                    cover_hook: parseFloat(document.getElementById(`ch_c${c}_p${p}`).value) || 0,
+                    tightness_rating: parseFloat(document.getElementById(`tightness_c${c}_p${p}`).value) || 0,
+                    actual_overlap: parseFloat(document.getElementById(`ov_mm_c${c}_p${p}`).value) || 0,
+                    overlap_percent: parseFloat(document.getElementById(`ovp_c${c}_p${p}`).value) || 0,
+                    bhb_percent: parseFloat(document.getElementById(`bhb_c${c}_p${p}`).value) || 0,
+                    free_space: parseFloat(document.getElementById(`fs_c${c}_p${p}`).value) || 0
+                });
+            }
+        }
+
+        const { error: pointsError } = await sb.from('inspection_points').insert(pointsToInsert);
+        if (pointsError) throw pointsError;
+
+        alert("SUCCESS: Full REC 7.2.12 Matrix synced to Supabase Cloud.");
+        location.reload(); // Refresh to clear form for next test
+
+    } catch (err) {
+        console.error("Sync Error:", err);
+        alert("DATABASE ERROR: " + err.message);
+    }
+}
     window.onload = () => renderView();
 </script>
 </body>
