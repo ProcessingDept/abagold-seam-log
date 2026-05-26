@@ -10,7 +10,7 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-light); margin: 0; padding: 10px; color: #333; }
         .container { max-width: 1600px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         
-        /* Search Engine Header */
+        /* Search Engine */
         .search-engine { background: var(--primary-color); padding: 15px; border-radius: 8px; margin-bottom: 20px; color: white; display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
         .search-input-group { display: flex; flex-direction: column; flex: 1; min-width: 140px; }
         .search-input-group label { font-size: 10px; text-transform: uppercase; margin-bottom: 4px; color: #b0c4de; }
@@ -60,7 +60,6 @@
         <button class="mode-btn" id="btnQuick" onclick="setMode('Quick')">Quick Test</button>
     </div>
 
-    <!-- METADATA GRID -->
     <div id="metaSection" class="meta-grid">
         <div class="form-group"><label>DATE *</label><input type="date" id="report_date"></div>
         <div class="form-group"><label>AG CODE *</label><input type="text" id="ag_code"></div>
@@ -81,20 +80,17 @@
         <div class="form-group"><label>Plate Tb (Body)</label><input type="number" id="tb" step="0.001" oninput="runAI()"></div>
     </div>
 
-    <!-- AI DIAGNOSTICS PANEL -->
     <div id="aiDiagnosticPanel" class="ai-panel">
         <h3>⚠️ AI Seamer Diagnostics</h3>
         <ul id="aiList" class="ai-list"></ul>
     </div>
 
-    <!-- QUICK TEST CALCULATOR -->
     <div id="quickCalculator" class="quick-calculator">
         <div class="form-group"><label>Plate Te (Ends)</label><input type="number" id="te_q" step="0.001" oninput="runAI()"></div>
         <div class="form-group"><label>Plate Tb (Body)</label><input type="number" id="tb_q" step="0.001" oninput="runAI()"></div>
         <div id="quickFields"></div>
     </div>
 
-    <!-- MAIN INSPECTION TABLE -->
     <div id="matrixContainer" class="table-container">
         <table id="inspectionTable">
             <thead>
@@ -118,11 +114,13 @@
     const sb = supabase.createClient('https://kbpyivgmgipskwiutbtk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImticHlpdmdtZ2lwc2t3aXV0YnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ3ODYsImV4cCI6MjA5NDk0MDc4Nn0.kGcr57Mdnd9jFepz9ndDFuEUEwD8qRVqIkCNhmgCKPY');
     let currentMode = 'Report';
     
+    // UPDATED ORDER: Seam Length, Seam Thickness, Body Hook, Cover Hook, Tightness
     const fields = [
-        { id: 'bh', label: 'Body Hook (1.80-2.15)', isCalc: false, min: 1.80, max: 2.15 },
-        { id: 'ch', label: 'Cover Hook (1.70-2.10)', isCalc: false, min: 1.70, max: 2.10 },
+        { id: 'vac', label: 'Vacuum (>-5 KPa)', isCalc: false, min: -5, max: 100 },
         { id: 'sl', label: 'Seam Length (2.65-3.05)', isCalc: false, min: 2.65, max: 3.05 },
         { id: 'st', label: 'Seam Thickness', isCalc: false },
+        { id: 'bh', label: 'Body Hook (1.80-2.15)', isCalc: false, min: 1.80, max: 2.15 },
+        { id: 'ch', label: 'Cover Hook (1.70-2.10)', isCalc: false, min: 1.70, max: 2.10 },
         { id: 'tightness', label: 'Tightness Rating (70-100%)', isCalc: false, min: 70, max: 100 },
         { id: 'ov_mm', label: 'Actual Overlap (1mm Min)', isCalc: true, min: 1.0 },
         { id: 'ovp', label: 'Overlap % (Min 45%)', isCalc: true, min: 45 },
@@ -167,6 +165,7 @@
             const container = document.getElementById('quickFields');
             container.innerHTML = '';
             fields.forEach(f => {
+                if(f.id === 'vac') return; // Skip vacuum in quick test
                 container.innerHTML += `<div class="form-group"><label>${f.label}</label><input type="number" step="0.001" id="${f.id}_q" ${f.isCalc ? 'readonly class="calc-row"' : 'oninput="runAI()"'}></div>`;
             });
         }
@@ -194,12 +193,13 @@
                 updateField('bhb_q', Math.round(bhb), bhb >= 70 && bhb <= 90);
                 if(st) updateField('fs_q', (st - (2 * tb + 3 * te)).toFixed(3), (st - (2 * tb + 3 * te)) >= 0.03);
                 
-                if (ov_mm < 1.0) issues.push("Actual Overlap too low: Check 1st op roll tightness.");
-                if (sl > 2.95) issues.push("Seam Length high: Check 1st op roll or roll profile wear.");
+                if (ov_mm < 1.0) issues.push("Overlap too low: Check 1st op roll tightness.");
+                if (sl > 2.95) issues.push("Seam Length high: Check roll profile wear."); [3]
             }
         } else {
             for(let c=1; c<=2; c++) {
                 for(let p=1; p<=3; p++) {
+                    const vac = parseFloat(document.getElementById(`vac_c${c}_p${p}`).value) || 0;
                     const bh = parseFloat(document.getElementById(`bh_c${c}_p${p}`).value) || 0;
                     const ch = parseFloat(document.getElementById(`ch_c${c}_p${p}`).value) || 0;
                     const sl = parseFloat(document.getElementById(`sl_c${c}_p${p}`).value) || 0;
@@ -216,7 +216,8 @@
                         updateField(`bhb_c${c}_p${p}`, Math.round(bhb), bhbPass);
                         if(st) updateField(`fs_c${c}_p${p}`, (st - (2 * tb + 3 * te)).toFixed(3), (st - (2 * tb + 3 * te)) >= 0.03);
                         
-                        if (ov_mm < 1.0) issues.push(`Can ${c} Pt ${p}: Low Overlap. Check roll pressure.`);
+                        if (ov_mm < 1.0) issues.push(`Can ${c} Pt ${p}: Low Overlap.`); [3]
+                        if (vac < -5) issues.push(`Can ${c} Pt ${p}: Vacuum below -5 KPa.`); [2]
                     }
                 }
             }
@@ -232,8 +233,8 @@
         el.classList.toggle('out-of-spec', !isPass);
     }
 
-    async function searchRecords() { alert("Searching for existing AG Code and Job records..."); }
-    async function submitRecords() { alert("Syncing full measurement matrix to cloud..."); }
+    async function searchRecords() { alert("Searching records for existing AG Code and Job..."); }
+    async function submitRecords() { alert("Syncing matrix to cloud database..."); }
 
     window.onload = () => renderView();
 </script>
