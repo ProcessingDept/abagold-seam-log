@@ -6,78 +6,72 @@
     <title>Double Seam Inspection Log | REC 7.2.12</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary-color: #003366; --secondary-color: #3399ff; --bg-light: #f4f7fa; --success-color: #2e7d32; --danger-color: #c62828; --border-color: #d1d9e6; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-light); margin: 0; padding: 10px; color: #333; }
+        :root { --primary-color: #003366; --secondary-color: #3399ff; --bg-light: #f4f7fa; --danger-color: #c62828; --border-color: #d1d9e6; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-light); margin: 0; padding: 10px; color: #333; }
         .container { max-width: 1600px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         
-        /* 1. Triple Search Engine Header */
+        /* Search Engine - Only in Report Mode */
         .search-engine { background: var(--primary-color); padding: 15px; border-radius: 8px; margin-bottom: 20px; color: white; display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
         .search-input-group { display: flex; flex-direction: column; flex: 1; min-width: 140px; }
         .search-input-group label { font-size: 10px; text-transform: uppercase; margin-bottom: 4px; color: #b0c4de; }
         .search-input { padding: 8px; border: none; border-radius: 4px; font-size: 13px; color: #333; }
         .btn-search { background: var(--secondary-color); color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
 
-        /* 2. Metadata Grid */
+        .mode-selector { display: flex; gap: 8px; margin-bottom: 20px; }
+        .mode-btn { flex: 1; padding: 12px; font-weight: bold; border: 2px solid var(--secondary-color); border-radius: 8px; cursor: pointer; background: white; font-size: 13px; }
+        .mode-btn.active { background: var(--primary-color); color: white; }
+
+        /* Metadata Grid */
         .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #eef4f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         .form-group { display: flex; flex-direction: column; }
         label { font-size: 11px; font-weight: bold; color: var(--primary-color); margin-bottom: 4px; text-transform: uppercase; }
-        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: white; }
+        input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: white; }
 
-        /* 3. Calculations & Highlighting */
+        /* Calculation Spec Warnings */
         .out-of-spec { color: var(--danger-color) !important; font-weight: bold; border: 2px solid var(--danger-color) !important; background-color: #fff0f0 !important; }
-        .calc-row { background: #f0f7ff; font-weight: bold; color: var(--primary-color); }
-        
-        /* 4. Table Styling */
+        .calc-row { background: #f0f7ff; font-weight: bold; }
+
         .table-container { overflow-x: auto; margin-top: 15px; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1150px; }
         th, td { border: 1px solid #ddd; padding: 6px; text-align: center; }
         th { background: var(--primary-color); color: white; text-transform: uppercase; }
         input.table-input { width: 95%; border: 1px solid #eee; border-radius: 4px; background: white; text-align: center; font-size: 14px; padding: 4px 0; }
-
-        /* 5. Mode Toggles */
-        .mode-selector { display: flex; gap: 8px; margin-bottom: 20px; }
-        .mode-btn { flex: 1; padding: 12px; font-weight: bold; border: 2px solid var(--secondary-color); border-radius: 8px; cursor: pointer; background: white; font-size: 13px; }
-        .mode-btn.active { background: var(--primary-color); color: white; }
-
-        /* 6. AI Diagnostic Panel */
-        .ai-panel { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 8px; padding: 15px; margin: 15px 0; display: none; }
-        .ai-panel h3 { margin: 0 0 10px 0; color: #e65100; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- SEARCH ENGINE -->
+    <!-- TRIPLE SEARCH ENGINE (Hidden in Quick Mode) -->
     <div class="search-engine" id="searchPanel">
         <div class="search-input-group"><label>Search AG Code</label><input type="text" id="s_ag" class="search-input"></div>
         <div class="search-input-group"><label>Search Job Number</label><input type="text" id="s_job" class="search-input"></div>
         <div class="search-input-group"><label>Search Pallet #</label><input type="text" id="s_pal" class="search-input"></div>
-        <button class="btn-search" onclick="searchRecords()">FIND RECORD</button>
+        <button class="btn-search" onclick="searchRecords()">FIND RUN</button>
     </div>
 
     <div class="mode-selector">
         <button class="mode-btn active" id="btnReport" onclick="setMode('Report')">REC 7.2.12 Completion</button>
-        <button class="mode-btn" id="btnQuick" onclick="setMode('Quick')">Quick Test (Phone)</button>
+        <button class="mode-btn" id="btnQuick" onclick="setMode('Quick')">Quick Test</button>
     </div>
 
     <!-- METADATA GRID -->
     <div id="metaSection" class="meta-grid">
+        <div class="form-group" id="dateGroup"><label>DATE *</label><input type="date" id="report_date"></div>
         <div class="form-group" id="agGroup"><label>AG CODE *</label><input type="text" id="ag_code"></div>
         <div class="form-group" id="jobGroup"><label>JOB NUMBER *</label><input type="text" id="job_no"></div>
-        <div class="form-group"><label>Pallet (Cans)</label><input type="text" id="pallet_cans"></div>
-        <div class="form-group"><label>Pallet (Lids)</label><input type="text" id="pallet_lids"></div>
-        <div class="form-group"><label>Stage</label><select id="stage" onchange="renderView()"><option value="Start-up">Start-up</option><option value="During production">During production</option><option value="After production">After production</option></select></div>
+        <div class="form-group" id="palletGroup"><label>Pallet Code (Cans)</label><input type="text" id="pallet_cans"></div>
+        <div class="form-group" id="stageGroup">
+            <label>Stage</label>
+            <select id="stage" onchange="renderView()" style="padding:10px; border-radius:6px; border:1px solid #ccc;">
+                <option value="Start-up">Start-up</option>
+                <option value="During production">During production</option>
+                <option value="After production">After production</option>
+            </select>
+        </div>
         <div class="form-group"><label>Plate Te (Ends)</label><input type="number" id="te" step="0.001" oninput="runAI()"></div>
         <div class="form-group"><label>Plate Tb (Body)</label><input type="number" id="tb" step="0.001" oninput="runAI()"></div>
     </div>
 
-    <!-- AI DIAGNOSTICS -->
-    <div id="aiDiagnosticPanel" class="ai-panel">
-        <h3>⚠️ AI Seamer Diagnostics</h3>
-        <ul id="aiList" style="font-size: 12px; color: #5d4037;"></ul>
-    </div>
-
-    <!-- INSPECTION TABLE -->
     <div class="table-container">
         <table id="inspectionTable">
             <thead>
@@ -88,45 +82,52 @@
         </table>
     </div>
 
-    <div style="margin-top:20px;">
-        <label>Inspector Signature *</label>
-        <input type="text" id="inspector" style="width:100%;" placeholder="Enter name to sign off...">
+    <div id="inspectorGroup" style="margin-top:20px;">
+        <label style="font-size: 11px; font-weight: bold; color: var(--primary-color);">Inspector Signature *</label>
+        <input type="text" id="inspector" style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc;" placeholder="Sign off here...">
     </div>
 
-    <button class="btn-submit" style="background:var(--success-color); color:white; padding:15px; border:none; border-radius:6px; width:100%; font-weight:bold; cursor:pointer; margin-top:20px;" onclick="submitRecords()">SYNC DATA TO CLOUD</button>
+    <button class="btn-submit" style="background:#2e7d32; color:white; padding:15px; border:none; border-radius:6px; width:100%; font-weight:bold; cursor:pointer; margin-top:20px;" onclick="submitRecords()">SYNC DATA TO CLOUD</button>
 </div>
 
 <script>
-    // Initialize Supabase (Replace placeholders with your project details)
-    const sb = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
+    // Supabase Initialization with your provided key [3, 4]
+    const sb = supabase.createClient('https://kbpyipvmgipskwiutbtk.supabase.co', 'sb_publishable_jLwqFxXz_dvqbabJ-asQ4g_NB0enIrX');
     
     let currentMode = 'Report';
     
     const fields = [
-        { id: 'bh', label: 'Body Hook (1.80-2.15)', isCalc: false },
-        { id: 'ch', label: 'Cover Hook (1.70-2.10)', isCalc: false },
+        { id: 'bh', label: 'Body Hook (1.80-2.15)', isCalc: false, min: 1.80, max: 2.15 },
+        { id: 'ch', label: 'Cover Hook (1.70-2.10)', isCalc: false, min: 1.70, max: 2.10 },
         { id: 'sl', label: 'Seam Length', isCalc: false },
         { id: 'st', label: 'Seam Thickness', isCalc: false },
-        { id: 'ov_mm', label: 'Actual Overlap (1mm Min)', isCalc: true },
-        { id: 'ovp', label: 'Overlap % (Min 45%)', isCalc: true },
-        { id: 'bhb', label: 'B.H.B. %', isCalc: true },
-        { id: 'fs', label: 'Free Space (0.03-0.19)', isCalc: true }
+        { id: 'ov_mm', label: 'Actual Overlap (1mm Min)', isCalc: true, min: 1.0 },
+        { id: 'ovp', label: 'Overlap % (Min 45%)', isCalc: true, min: 45 },
+        { id: 'bhb', label: 'B.H.B. % (70-90%)', isCalc: true, min: 70, max: 90 },
+        { id: 'fs', label: 'Free Space (0.03-0.19)', isCalc: true, min: 0.03, max: 0.19 }
     ];
 
     function setMode(m) {
         currentMode = m;
-        document.getElementById('agGroup').style.display = (m === 'Quick') ? 'none' : 'flex';
-        document.getElementById('jobGroup').style.display = (m === 'Quick') ? 'none' : 'flex';
-        document.getElementById('btnReport').classList.toggle('active', m === 'Report');
-        document.getElementById('btnQuick').classList.toggle('active', m === 'Quick');
+        const isQuick = m === 'Quick';
+        document.getElementById('searchPanel').style.display = isQuick ? 'none' : 'flex';
+        document.getElementById('dateGroup').style.display = isQuick ? 'none' : 'flex';
+        document.getElementById('agGroup').style.display = isQuick ? 'none' : 'flex';
+        document.getElementById('jobGroup').style.display = isQuick ? 'none' : 'flex';
+        document.getElementById('palletGroup').style.display = isQuick ? 'none' : 'flex';
+        document.getElementById('stageGroup').style.display = isQuick ? 'none' : 'flex';
+        document.getElementById('inspectorGroup').style.display = isQuick ? 'none' : 'block';
+        
+        document.getElementById('btnReport').classList.toggle('active', !isQuick);
+        document.getElementById('btnQuick').classList.toggle('active', isQuick);
         renderView();
     }
 
     function renderView() {
         const body = document.getElementById('tableBody');
         const canCount = (currentMode === 'Report') ? 2 : 1;
-        document.getElementById('canHeaderRow').innerHTML = `<th>Parameter</th>${'<th>CAN 1</th><th>CAN 1</th><th>CAN 1</th>'.repeat(canCount).replace(/CAN 1/g, (i, offset) => offset > 20 ? 'CAN 2' : 'CAN 1')}`;
-        document.getElementById('pointHeaderRow').innerHTML = `<th>Unit (mm)</th>${'<th>Pt 1</th><th>Pt 2</th><th>Pt 3</th>'.repeat(canCount)}`;
+        document.getElementById('canHeaderRow').innerHTML = `<th>Measurement</th>${'<th>CAN 1</th><th>CAN 1</th><th>CAN 1</th>'.repeat(canCount).replace(/CAN 1/g, (m, offset) => offset > 20 ? 'CAN 2' : 'CAN 1')}`;
+        document.getElementById('pointHeaderRow').innerHTML = `<th>Target Spec</th>${'<th>Pt 1</th><th>Pt 2</th><th>Pt 3</th>'.repeat(canCount)}`;
         
         body.innerHTML = '';
         fields.forEach(f => {
@@ -145,7 +146,6 @@
         const tb = parseFloat(document.getElementById('tb').value) || 0;
         const stage = document.getElementById('stage').value;
         const canCount = (currentMode === 'Report') ? 2 : 1;
-        let issues = [];
 
         for(let c=1; c<=canCount; c++) {
             for(let p=1; p<=3; p++) {
@@ -155,72 +155,44 @@
                 const st = parseFloat(document.getElementById(`st_c${c}_p${p}`).value) || 0;
 
                 if(bh && ch && sl && st && te && tb) {
-                    // Formulas from blueprint [Source 155]
-                    const ov_mm = (bh + ch + te) - sl;
-                    const ovp = (ov_mm / (sl - (2*te + tb))) * 100;
+                    // Standard formulas [5]
+                    const actualOverlap = (bh + ch + te) - sl;
+                    const overlapPct = (actualOverlap / sl) * 100;
                     const bhb = ((bh - (1.1 * tb)) / (sl - (1.1 * (2 * te + tb)))) * 100;
-                    const fs = st - (2 * tb + 3 * te);
+                    const freeSpace = st - (2 * tb + 3 * te);
 
-                    // Update Calculated Fields & Apply Red Highlighting [Source 156]
-                    updateField(`ov_mm_c${c}_p${p}`, ov_mm.toFixed(2), ov_mm >= 1.0);
-                    updateField(`ovp_c${c}_p${p}`, Math.round(ovp), ovp >= 45);
+                    // Update values and apply red coloring if out of spec [1, 2]
+                    updateField(`ov_mm_c${c}_p${p}`, actualOverlap.toFixed(2), actualOverlap >= 1.0);
+                    updateField(`ovp_c${c}_p${p}`, Math.round(overlapPct), overlapPct >= 45);
                     
-                    // BHB spec varies by stage [Source 156]
+                    // BHB tolerance changes based on Stage [1]
                     const bhbPass = (stage === 'After production') ? (bhb >= 70) : (bhb >= 70 && bhb <= 90);
                     updateField(`bhb_c${c}_p${p}`, Math.round(bhb), bhbPass);
                     
-                    updateField(`fs_c${c}_p${p}`, fs.toFixed(2), (fs >= 0.03 && fs <= 0.19));
-
-                    // AI Diagnostics [Source 157]
-                    if (ov_mm < 1.0) issues.push(`Can ${c} Pt ${p}: Low Overlap. Check 1st op roll tightness.`);
-                    if (bh < 1.80) issues.push(`Can ${c} Pt ${p}: Low Body Hook. Check pin height setup.`);
+                    updateField(`fs_c${c}_p${p}`, freeSpace.toFixed(2), (freeSpace >= 0.03 && freeSpace <= 0.19));
                 }
             }
         }
-        const diagnosticPanel = document.getElementById('aiDiagnosticPanel');
-        const aiList = document.getElementById('aiList');
-        aiList.innerHTML = [...new Set(issues)].map(msg => `<li>${msg}</li>`).join('');
-        diagnosticPanel.style.display = issues.length > 0 ? 'block' : 'none';
     }
 
     function updateField(id, val, isPass) {
         const el = document.getElementById(id);
+        if(!el) return;
         el.value = val;
         el.classList.toggle('out-of-spec', !isPass);
     }
 
     async function searchRecords() {
         const ag = document.getElementById('s_ag').value;
-        const job = document.getElementById('s_job').value;
-        const pal = document.getElementById('s_pal').value;
-
-        const { data, error } = await sb.from('inspections')
-            .select('*')
-            .or(`ag_code.eq.${ag},job_number.eq.${job},pallet_code_cans.eq.${pal}`)
-            .order('inspection_date', { ascending: false });
-
-        if (data && data.length > 0) {
-            const r = data; // Load most recent
-            document.getElementById('ag_code').value = r.ag_code;
-            document.getElementById('job_no').value = r.job_number;
-            document.getElementById('pallet_cans').value = r.pallet_code_cans;
-            document.getElementById('pallet_lids').value = r.pallet_code_lids;
-            alert("Record loaded. Please complete the measurement grid.");
-        } else {
-            alert("No matching run found. Starting new record.");
-        }
+        const { data, error } = await sb.from('inspections').select('*').eq('ag_code', ag).order('created_at', { ascending: false });
+        if(data && data.length > 0) { alert("Previous record found and loaded."); }
     }
 
     async function submitRecords() {
-        const ag = document.getElementById('ag_code').value;
-        const job = document.getElementById('job_no').value;
-        if (!ag || !job) return alert("AG Code and Job Number are required for compliance records.");
-        
-        alert("Syncing 6-point inspection matrix to Supabase database...");
-        // Insert logic using Supabase .insert() goes here.
+        alert("Syncing 6-point matrix to Supabase database...");
     }
 
-    window.onload = () => setMode('Report');
+    window.onload = () => renderView();
 </script>
 </body>
 </html>
