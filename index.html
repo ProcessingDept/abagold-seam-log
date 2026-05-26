@@ -26,7 +26,6 @@
         label { font-size: 11px; font-weight: bold; color: var(--primary-color); margin-bottom: 4px; text-transform: uppercase; }
         input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: white; width: 100%; box-sizing: border-box; }
 
-        /* AI Diagnostic Panel */
         .ai-panel { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 8px; padding: 15px; margin: 15px 0; display: none; }
         .ai-panel h3 { margin: 0 0 10px 0; color: #e65100; font-size: 14px; }
         .ai-list { margin: 0; padding-left: 20px; font-size: 12px; color: #5d4037; }
@@ -58,7 +57,6 @@
         <button class="mode-btn" id="btnQuick" onclick="setMode('Quick')">Quick Test</button>
     </div>
 
-    <!-- METADATA GRID -->
     <div id="metaSection" class="meta-grid">
         <div class="form-group"><label>DATE *</label><input type="date" id="report_date"></div>
         <div class="form-group"><label>AG CODE *</label><input type="text" id="ag_code"></div>
@@ -113,7 +111,7 @@
     const sb = supabase.createClient('https://kbpyivgmgipskwiutbtk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImticHlpdmdtZ2lwc2t3aXV0YnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ3ODYsImV4cCI6MjA5NDk0MDc4Nn0.kGcr57Mdnd9jFepz9ndDFuEUEwD8qRVqIkCNhmgCKPY');
     let currentMode = 'Report';
     
-    // Order: Seam Length, Thickness, Body Hook, Cover Hook, Tightness
+    // Ordered per request: Length, Thickness, Body Hook, Cover Hook, Tightness
     const fields = [
         { id: 'vac', label: 'Vacuum (>-5 KPa)', isCalc: false, min: -5 },
         { id: 'sl', label: 'Seam Length (2.65-3.05)', isCalc: false, min: 2.65, max: 3.05 },
@@ -175,52 +173,49 @@
         const tb = parseFloat(document.getElementById(currentMode === 'Quick' ? 'tb_q' : 'tb').value) || 0;
         let issues = [];
 
-        // GLOBAL SPECS (AFTER-PRODUCTION LIMITS FOR ALL STAGES)
-        const slMax = 3.05;
-        const stMax = 1.20;
-
         function processPoint(suffix, prefix) {
             const bh = parseFloat(document.getElementById(`bh${suffix}`).value) || 0;
             const ch = parseFloat(document.getElementById(`ch${suffix}`).value) || 0;
             const sl = parseFloat(document.getElementById(`sl${suffix}`).value) || 0;
             const st = parseFloat(document.getElementById(`st${suffix}`).value) || 0;
             const tgn = parseFloat(document.getElementById(`tightness${suffix}`).value) || 0;
+            const vac = document.getElementById(`vac${suffix}`) ? (parseFloat(document.getElementById(`vac${suffix}`).value) || 0) : 0;
 
-            // OVERLAP CALCULATIONS - SEAM SCHOOL COMPATIBLE
+            // Highlight Manual Inputs ONLY (no resetting value while typing)
+            highlightManual(`sl${suffix}`, sl, sl >= 2.65 && sl <= 3.05);
+            highlightManual(`st${suffix}`, st, st >= 1.10 && st <= 1.20);
+            highlightManual(`bh${suffix}`, bh, bh >= 1.80 && bh <= 2.15);
+            highlightManual(`ch${suffix}`, ch, ch >= 1.70 && ch <= 2.10);
+            highlightManual(`tightness${suffix}`, tgn, tgn >= 70);
+            if (document.getElementById(`vac${suffix}`)) highlightManual(`vac${suffix}`, vac, vac >= -5);
+
+            // Seam School Precision Calculations
             if(bh && ch && sl && te && tb) {
                 const actualOverlap = (bh + ch + te) - sl;
-                // High-precision denominator to match Seam School
                 const overlapSpace = sl - (2 * te + tb);
                 const overlapPct = (actualOverlap / overlapSpace) * 100;
 
-                updateField(`ov_mm${suffix}`, actualOverlap.toFixed(2), actualOverlap >= 1.0);
-                updateField(`ovp${suffix}`, Math.round(overlapPct), overlapPct >= 45);
-                
+                updateCalcField(`ov_mm${suffix}`, actualOverlap.toFixed(2), actualOverlap >= 1.0);
+                updateCalcField(`ovp${suffix}`, Math.round(overlapPct), overlapPct >= 45);
                 if(actualOverlap < 1.0) issues.push(`${prefix}Low Overlap (<1.0mm).`);
             }
 
-            // BHB & FREE SPACE
             if(bh && sl && te && tb) {
                 const bhb = ((bh - (1.1 * tb)) / (sl - (1.1 * (2 * te + tb)))) * 100;
-                updateField(`bhb${suffix}`, Math.round(bhb), bhb >= 70);
+                updateCalcField(`bhb${suffix}`, Math.round(bhb), bhb >= 70);
             }
             if(st && tb && te) {
                 const fs = st - (2 * tb + 3 * te);
-                updateField(`fs${suffix}`, fs.toFixed(3), fs >= 0.03 && fs <= 0.19);
-                if(fs > 0.19) issues.push(`${prefix}High Free Space (>0.19). Check 2nd op pressure.`);
+                updateCalcField(`fs${suffix}`, fs.toFixed(3), fs >= 0.03 && fs <= 0.19);
+                if(fs > 0.19) issues.push(`${prefix}High Free Space. Loose 2nd op.`);
             }
-
-            // SPEC HIGHLIGHTING (AFTER-PROD LIMITS)
-            if(sl > 0) updateField(`sl${suffix}`, sl, sl >= 2.65 && sl <= slMax);
-            if(st > 0) updateField(`st${suffix}`, st, st >= 1.10 && st <= stMax);
-            if(sl > slMax) issues.push(`${prefix}Seam Length High. Check profile wear.`);
         }
 
         if (currentMode === 'Quick') {
-            processPoint('_q', "Quick Test: ");
+            processPoint('_q', "Quick: ");
         } else {
             for(let c=1; c<=2; c++) {
-                for(let p=1; p<=3; p++) processPoint(`_c${c}_p${p}`, `Can ${c} Pt ${p}: `);
+                for(let p=1; p<=3; p++) processPoint(`_c${c}_p${p}`, `C${c}P${p}: `);
             }
         }
 
@@ -228,18 +223,21 @@
         document.getElementById('aiDiagnosticPanel').style.display = issues.length > 0 ? 'block' : 'none';
     }
 
-    function updateField(id, val, isPass) {
+    function updateCalcField(id, val, isPass) {
         const el = document.getElementById(id);
         if(!el) return;
-        if(typeof val === 'number') el.value = val;
+        el.value = val;
         el.classList.toggle('out-of-spec', !isPass);
     }
 
-    async function searchRecords() { alert("Searching records..."); }
-    async function submitRecords() { alert("Syncing matrix to Supabase..."); }
+    function highlightManual(id, val, isPass) {
+        const el = document.getElementById(id);
+        if(!el || val === 0) return;
+        el.classList.toggle('out-of-spec', !isPass);
+    }
 
+    async function submitRecords() { alert("Syncing to cloud..."); }
     window.onload = () => renderView();
 </script>
 </body>
 </html>
-Why this version is correct:
