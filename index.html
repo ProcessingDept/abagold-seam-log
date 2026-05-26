@@ -244,7 +244,54 @@
         el.classList.toggle('out-of-spec', !isPass);
     }
 
- async function submitRecords() {
+async function searchRecords() {
+    // 1. Get values from the top search bars
+    const sAg = document.getElementById('s_ag').value;
+    const sJob = document.getElementById('s_job').value;
+    const sPal = document.getElementById('s_pal').value;
+
+    // 2. Validation: Ensure at least one field has a value
+    if (!sAg && !sJob && !sPal) {
+        alert("Please enter an AG Code, Job Number, or Pallet Code to search.");
+        return;
+    }
+
+    try {
+        // 3. Start the Supabase Query
+        let query = sb.from('inspections').select('*');
+
+        // 4. Apply filters based on what was typed
+        if (sAg) query = query.ilike('ag_code', `%${sAg}%`);
+        if (sJob) query = query.ilike('job_number', `%${sJob}%`);
+        if (sPal) query = query.ilike('pallet_code_cans', `%${sPal}%`);
+
+        // 5. Execute the search (limiting to 1 result for auto-population)
+        const { data, error } = await query.limit(1);
+
+        if (error) throw error;
+
+        if (data.length === 0) {
+            alert("No matching production runs found in the cloud.");
+        } else {
+            // 6. Auto-populate the form metadata with the found record
+            const record = data;
+            document.getElementById('ag_code').value = record.ag_code || "";
+            document.getElementById('job_no').value = record.job_number || "";
+            document.getElementById('pallet_cans').value = record.pallet_code_cans || "";
+            document.getElementById('can_size').value = record.can_size || "73x111mm";
+            document.getElementById('micro_serial').value = record.micrometer_serial || "";
+            
+            // Trigger UI updates (like the custom size field)
+            toggleOtherSize();
+            
+            alert(`SUCCESS: Found and loaded Job No: ${record.job_number}`);
+        }
+    } catch (err) {
+        console.error("Search Error:", err);
+        alert("SEARCH FAILED: " + err.message);
+    }
+}
+    async function submitRecords() {
     // 1. Validation: Block sync if in Quick Test or missing critical metadata
     if (currentMode === 'Quick') {
         alert("Quick Test data is for diagnostics only and is not saved to the cloud.");
