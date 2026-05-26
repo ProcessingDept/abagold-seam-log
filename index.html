@@ -10,6 +10,7 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-light); margin: 0; padding: 10px; color: #333; }
         .container { max-width: 1600px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         
+        /* Search Engine Header */
         .search-engine { background: var(--primary-color); padding: 15px; border-radius: 8px; margin-bottom: 20px; color: white; display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
         .search-input-group { display: flex; flex-direction: column; flex: 1; min-width: 140px; }
         .search-input-group label { font-size: 10px; text-transform: uppercase; margin-bottom: 4px; color: #b0c4de; }
@@ -20,11 +21,18 @@
         .mode-btn { flex: 1; padding: 12px; font-weight: bold; border: 2px solid var(--secondary-color); border-radius: 8px; cursor: pointer; background: white; font-size: 13px; }
         .mode-btn.active { background: var(--primary-color); color: white; }
 
+        /* Metadata Grid */
         .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #eef4f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         .form-group { display: flex; flex-direction: column; margin-bottom: 10px; }
         label { font-size: 11px; font-weight: bold; color: var(--primary-color); margin-bottom: 4px; text-transform: uppercase; }
         input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: white; width: 100%; box-sizing: border-box; }
 
+        /* AI Diagnostic Panel */
+        .ai-panel { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 8px; padding: 15px; margin: 15px 0; display: none; }
+        .ai-panel h3 { margin: 0 0 10px 0; color: #e65100; font-size: 14px; }
+        .ai-list { margin: 0; padding-left: 20px; font-size: 12px; color: #5d4037; }
+
+        /* Calculation Spec Warnings */
         .out-of-spec { color: var(--danger-color) !important; font-weight: bold; border: 2px solid var(--danger-color) !important; background-color: #fff0f0 !important; }
         .calc-row { background: #f0f7ff; font-weight: bold; }
 
@@ -40,7 +48,6 @@
 <body>
 
 <div class="container">
-    <!-- TRIPLE SEARCH ENGINE -->
     <div class="search-engine" id="searchPanel">
         <div class="search-input-group"><label>Search AG Code</label><input type="text" id="s_ag" class="search-input"></div>
         <div class="search-input-group"><label>Search Job Number</label><input type="text" id="s_job" class="search-input"></div>
@@ -74,6 +81,12 @@
         <div class="form-group"><label>Plate Tb (Body)</label><input type="number" id="tb" step="0.001" oninput="runAI()"></div>
     </div>
 
+    <!-- AI DIAGNOSTICS PANEL -->
+    <div id="aiDiagnosticPanel" class="ai-panel">
+        <h3>⚠️ AI Seamer Diagnostics</h3>
+        <ul id="aiList" class="ai-list"></ul>
+    </div>
+
     <!-- QUICK TEST CALCULATOR -->
     <div id="quickCalculator" class="quick-calculator">
         <div class="form-group"><label>Plate Te (Ends)</label><input type="number" id="te_q" step="0.001" oninput="runAI()"></div>
@@ -105,7 +118,6 @@
     const sb = supabase.createClient('https://kbpyivgmgipskwiutbtk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImticHlpdmdtZ2lwc2t3aXV0YnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ3ODYsImV4cCI6MjA5NDk0MDc4Nn0.kGcr57Mdnd9jFepz9ndDFuEUEwD8qRVqIkCNhmgCKPY');
     let currentMode = 'Report';
     
-    // RESTORED LABELS: Seam Length and Seam Thickness
     const fields = [
         { id: 'bh', label: 'Body Hook (1.80-2.15)', isCalc: false, min: 1.80, max: 2.15 },
         { id: 'ch', label: 'Cover Hook (1.70-2.10)', isCalc: false, min: 1.70, max: 2.10 },
@@ -164,20 +176,26 @@
         const te = parseFloat(document.getElementById(currentMode === 'Quick' ? 'te_q' : 'te').value) || 0;
         const tb = parseFloat(document.getElementById(currentMode === 'Quick' ? 'tb_q' : 'tb').value) || 0;
         const stage = currentMode === 'Quick' ? 'Start-up' : document.getElementById('stage').value;
+        let issues = [];
 
         if (currentMode === 'Quick') {
             const bh = parseFloat(document.getElementById('bh_q').value) || 0;
             const ch = parseFloat(document.getElementById('ch_q').value) || 0;
             const sl = parseFloat(document.getElementById('sl_q').value) || 0;
             const st = parseFloat(document.getElementById('st_q').value) || 0;
+            
             if(bh && ch && sl && te && tb) {
                 const ov_mm = (bh + ch + te) - sl;
-                const ovp = (ov_mm / (sl - (2*te + tb))) * 100;
+                const ovp = (ov_mm / sl) * 100;
                 const bhb = ((bh - (1.1 * tb)) / (sl - (1.1 * (2 * te + tb)))) * 100;
+                
                 updateField('ov_mm_q', ov_mm.toFixed(2), ov_mm >= 1.0);
                 updateField('ovp_q', Math.round(ovp), ovp >= 45);
                 updateField('bhb_q', Math.round(bhb), bhb >= 70 && bhb <= 90);
-                if(st) updateField('fs_q', (st - (2 * tb + 3 * te)).toFixed(2), (st - (2 * tb + 3 * te)) >= 0.03);
+                if(st) updateField('fs_q', (st - (2 * tb + 3 * te)).toFixed(3), (st - (2 * tb + 3 * te)) >= 0.03);
+                
+                if (ov_mm < 1.0) issues.push("Actual Overlap too low: Check 1st op roll tightness.");
+                if (sl > 2.95) issues.push("Seam Length high: Check 1st op roll or roll profile wear.");
             }
         } else {
             for(let c=1; c<=2; c++) {
@@ -186,17 +204,25 @@
                     const ch = parseFloat(document.getElementById(`ch_c${c}_p${p}`).value) || 0;
                     const sl = parseFloat(document.getElementById(`sl_c${c}_p${p}`).value) || 0;
                     const st = parseFloat(document.getElementById(`st_c${c}_p${p}`).value) || 0;
+                    
                     if(bh && ch && sl && te && tb) {
                         const ov_mm = (bh + ch + te) - sl;
-                        updateField(`ov_mm_c${c}_p${p}`, ov_mm.toFixed(2), ov_mm >= 1.0);
-                        updateField(`ovp_c${c}_p${p}`, Math.round((ov_mm / (sl - (2*te + tb))) * 100), ((ov_mm / (sl - (2*te + tb))) * 100) >= 45);
+                        const ovp = (ov_mm / sl) * 100;
                         const bhb = ((bh - (1.1 * tb)) / (sl - (1.1 * (2 * te + tb)))) * 100;
-                        updateField(`bhb_c${c}_p${p}`, Math.round(bhb), (stage === 'After production') ? bhb >= 70 : (bhb >= 70 && bhb <= 90));
-                        if(st) updateField(`fs_c${c}_p${p}`, (st - (2 * tb + 3 * te)).toFixed(2), (st - (2 * tb + 3 * te)) >= 0.03);
+                        
+                        updateField(`ov_mm_c${c}_p${p}`, ov_mm.toFixed(2), ov_mm >= 1.0);
+                        updateField(`ovp_c${c}_p${p}`, Math.round(ovp), ovp >= 45);
+                        const bhbPass = (stage === 'After production') ? bhb >= 70 : (bhb >= 70 && bhb <= 90);
+                        updateField(`bhb_c${c}_p${p}`, Math.round(bhb), bhbPass);
+                        if(st) updateField(`fs_c${c}_p${p}`, (st - (2 * tb + 3 * te)).toFixed(3), (st - (2 * tb + 3 * te)) >= 0.03);
+                        
+                        if (ov_mm < 1.0) issues.push(`Can ${c} Pt ${p}: Low Overlap. Check roll pressure.`);
                     }
                 }
             }
         }
+        document.getElementById('aiList').innerHTML = [...new Set(issues)].map(msg => `<li>${msg}</li>`).join('');
+        document.getElementById('aiDiagnosticPanel').style.display = issues.length > 0 ? 'block' : 'none';
     }
 
     function updateField(id, val, isPass) {
