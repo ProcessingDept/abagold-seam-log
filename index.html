@@ -21,18 +21,18 @@
         .mode-btn { flex: 1; padding: 12px; font-weight: bold; border: 2px solid var(--secondary-color); border-radius: 8px; cursor: pointer; background: white; font-size: 13px; }
         .mode-btn.active { background: var(--primary-color); color: white; }
 
-        /* Metadata Grid */
+        /* Metadata & Calculator Grid */
         .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #eef4f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         .form-group { display: flex; flex-direction: column; margin-bottom: 10px; }
         label { font-size: 11px; font-weight: bold; color: var(--primary-color); margin-bottom: 4px; text-transform: uppercase; }
         input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: white; width: 100%; box-sizing: border-box; }
 
-        /* AI Diagnostic Panel */
+        /* AI Diagnostics */
         .ai-panel { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 8px; padding: 15px; margin: 15px 0; display: none; }
         .ai-panel h3 { margin: 0 0 10px 0; color: #e65100; font-size: 14px; }
         .ai-list { margin: 0; padding-left: 20px; font-size: 12px; color: #5d4037; }
 
-        /* Calculation Spec Warnings */
+        /* Spec Warnings */
         .out-of-spec { color: var(--danger-color) !important; font-weight: bold; border: 2px solid var(--danger-color) !important; background-color: #fff0f0 !important; }
         .calc-row { background: #f0f7ff; font-weight: bold; }
 
@@ -48,6 +48,7 @@
 <body>
 
 <div class="container">
+    <!-- SEARCH ENGINE -->
     <div class="search-engine" id="searchPanel">
         <div class="search-input-group"><label>Search AG Code</label><input type="text" id="s_ag" class="search-input"></div>
         <div class="search-input-group"><label>Search Job Number</label><input type="text" id="s_job" class="search-input"></div>
@@ -60,6 +61,7 @@
         <button class="mode-btn" id="btnQuick" onclick="setMode('Quick')">Quick Test</button>
     </div>
 
+    <!-- METADATA GRID -->
     <div id="metaSection" class="meta-grid">
         <div class="form-group"><label>DATE *</label><input type="date" id="report_date"></div>
         <div class="form-group"><label>AG CODE *</label><input type="text" id="ag_code"></div>
@@ -80,17 +82,20 @@
         <div class="form-group"><label>Plate Tb (Body)</label><input type="number" id="tb" step="0.001" oninput="runAI()"></div>
     </div>
 
+    <!-- AI DIAGNOSTICS PANEL -->
     <div id="aiDiagnosticPanel" class="ai-panel">
         <h3>⚠️ AI Seamer Diagnostics</h3>
         <ul id="aiList" class="ai-list"></ul>
     </div>
 
+    <!-- QUICK TEST CALCULATOR -->
     <div id="quickCalculator" class="quick-calculator">
         <div class="form-group"><label>Plate Te (Ends)</label><input type="number" id="te_q" step="0.001" oninput="runAI()"></div>
         <div class="form-group"><label>Plate Tb (Body)</label><input type="number" id="tb_q" step="0.001" oninput="runAI()"></div>
         <div id="quickFields"></div>
     </div>
 
+    <!-- MAIN INSPECTION TABLE -->
     <div id="matrixContainer" class="table-container">
         <table id="inspectionTable">
             <thead>
@@ -104,7 +109,7 @@
     <div id="footerActions" style="margin-top:20px;">
         <div id="inspectorGroup" style="margin-bottom:20px;">
             <label style="font-size: 11px; font-weight: bold; color: var(--primary-color);">Inspector Signature *</label>
-            <input type="text" id="inspector" style="width:100%;" placeholder="Sign off here...">
+            <input type="text" id="inspector" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;" placeholder="Sign off here...">
         </div>
         <button class="btn-submit" style="background:#2e7d32; color:white; padding:15px; border:none; border-radius:6px; width:100%; font-weight:bold; cursor:pointer;" onclick="submitRecords()">SYNC DATA TO CLOUD</button>
     </div>
@@ -114,11 +119,11 @@
     const sb = supabase.createClient('https://kbpyivgmgipskwiutbtk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImticHlpdmdtZ2lwc2t3aXV0YnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ3ODYsImV4cCI6MjA5NDk0MDc4Nn0.kGcr57Mdnd9jFepz9ndDFuEUEwD8qRVqIkCNhmgCKPY');
     let currentMode = 'Report';
     
-    // UPDATED ORDER: Seam Length, Seam Thickness, Body Hook, Cover Hook, Tightness
+    // REQUESTED ORDER: Seam Length, Thickness, Body Hook, Cover Hook, Tightness
     const fields = [
-        { id: 'vac', label: 'Vacuum (>-5 KPa)', isCalc: false, min: -5, max: 100 },
-        { id: 'sl', label: 'Seam Length (2.65-3.05)', isCalc: false, min: 2.65, max: 3.05 },
-        { id: 'st', label: 'Seam Thickness', isCalc: false },
+        { id: 'vac', label: 'Vacuum (>-5 KPa)', isCalc: false, min: -5 },
+        { id: 'sl', label: 'Seam Length (2.65-3.05)', isCalc: false, min: 2.65, max: 2.95 },
+        { id: 'st', label: 'Seam Thickness', isCalc: false, min: 1.10, max: 1.24 },
         { id: 'bh', label: 'Body Hook (1.80-2.15)', isCalc: false, min: 1.80, max: 2.15 },
         { id: 'ch', label: 'Cover Hook (1.70-2.10)', isCalc: false, min: 1.70, max: 2.10 },
         { id: 'tightness', label: 'Tightness Rating (70-100%)', isCalc: false, min: 70, max: 100 },
@@ -165,7 +170,7 @@
             const container = document.getElementById('quickFields');
             container.innerHTML = '';
             fields.forEach(f => {
-                if(f.id === 'vac') return; // Skip vacuum in quick test
+                if(f.id === 'vac') return;
                 container.innerHTML += `<div class="form-group"><label>${f.label}</label><input type="number" step="0.001" id="${f.id}_q" ${f.isCalc ? 'readonly class="calc-row"' : 'oninput="runAI()"'}></div>`;
             });
         }
@@ -177,53 +182,56 @@
         const stage = currentMode === 'Quick' ? 'Start-up' : document.getElementById('stage').value;
         let issues = [];
 
-        if (currentMode === 'Quick') {
-            const bh = parseFloat(document.getElementById('bh_q').value) || 0;
-            const ch = parseFloat(document.getElementById('ch_q').value) || 0;
-            const sl = parseFloat(document.getElementById('sl_q').value) || 0;
-            const st = parseFloat(document.getElementById('st_q').value) || 0;
-            
-            if(bh && ch && sl && te && tb) {
-                const ov_mm = (bh + ch + te) - sl;
-                const ovp = (ov_mm / sl) * 100;
-                const bhb = ((bh - (1.1 * tb)) / (sl - (1.1 * (2 * te + tb)))) * 100;
-                
-                updateField('ov_mm_q', ov_mm.toFixed(2), ov_mm >= 1.0);
-                updateField('ovp_q', Math.round(ovp), ovp >= 45);
-                updateField('bhb_q', Math.round(bhb), bhb >= 70 && bhb <= 90);
-                if(st) updateField('fs_q', (st - (2 * tb + 3 * te)).toFixed(3), (st - (2 * tb + 3 * te)) >= 0.03);
-                
-                if (ov_mm < 1.0) issues.push("Overlap too low: Check 1st op roll tightness.");
-                if (sl > 2.95) issues.push("Seam Length high: Check roll profile wear."); [3]
+        const slMax = (stage === 'After production') ? 3.05 : 2.95;
+        const stMax = (stage === 'After production') ? 1.20 : 1.24;
+
+        function processPoint(suffix, c, p) {
+            const bh = parseFloat(document.getElementById(`bh${suffix}`).value) || 0;
+            const ch = parseFloat(document.getElementById(`ch${suffix}`).value) || 0;
+            const sl = parseFloat(document.getElementById(`sl${suffix}`).value) || 0;
+            const st = parseFloat(document.getElementById(`st${suffix}`).value) || 0;
+            const tgn = parseFloat(document.getElementById(`tightness${suffix}`).value) || 0;
+            const vac = document.getElementById(`vac${suffix}`) ? (parseFloat(document.getElementById(`vac${suffix}`).value) || 0) : 0;
+
+            let prefix = (currentMode === 'Quick') ? "" : `Can ${c} Pt ${p}: `;
+
+            // ATOMIZED CALCULATIONS [7]
+            if(bh && ch && sl && te) {
+                const ov = (bh + ch + te) - sl;
+                updateField(`ov_mm${suffix}`, ov.toFixed(2), ov >= 1.0);
+                updateField(`ovp${suffix}`, Math.round((ov/sl)*100), (ov/sl)*100 >= 45);
+                if(ov < 1.0) issues.push(`${prefix}Low Overlap. Check 1st op roll tightness [8].`);
             }
+            if(bh && sl && te && tb) {
+                const bhb = ((bh - (1.1 * tb)) / (sl - (1.1 * (2 * te + tb)))) * 100;
+                const bhbPass = (stage === 'After production') ? bhb >= 70 : (bhb >= 70 && bhb <= 90);
+                updateField(`bhb${suffix}`, Math.round(bhb), bhbPass);
+            }
+            if(st && tb && te) {
+                const fs = st - (2 * tb + 3 * te);
+                updateField(`fs${suffix}`, fs.toFixed(3), fs >= 0.03 && fs <= 0.19);
+                if(fs > 0.19) issues.push(`${prefix}High Free Space. Loose 2nd op wheel [8].`);
+            }
+
+            // SPEC CHECKS
+            if(sl > slMax) issues.push(`${prefix}Seam Length High. Check roll profile wear [8].`);
+            if(st > stMax) issues.push(`${prefix}Seam Thickness High. 2nd op pressure loose [8].`);
+            if(bh > 0 && bh < 1.80) issues.push(`${prefix}Low Body Hook. Check lifter pressure or pin height [8].`);
+            if(tgn > 0) updateField(`tightness${suffix}`, tgn, tgn >= 70);
+            if(vac < -5 && currentMode === 'Report') issues.push(`${prefix}Vacuum below -5 KPa [9].`);
+        }
+
+        if (currentMode === 'Quick') {
+            processPoint('_q');
         } else {
             for(let c=1; c<=2; c++) {
-                for(let p=1; p<=3; p++) {
-                    const vac = parseFloat(document.getElementById(`vac_c${c}_p${p}`).value) || 0;
-                    const bh = parseFloat(document.getElementById(`bh_c${c}_p${p}`).value) || 0;
-                    const ch = parseFloat(document.getElementById(`ch_c${c}_p${p}`).value) || 0;
-                    const sl = parseFloat(document.getElementById(`sl_c${c}_p${p}`).value) || 0;
-                    const st = parseFloat(document.getElementById(`st_c${c}_p${p}`).value) || 0;
-                    
-                    if(bh && ch && sl && te && tb) {
-                        const ov_mm = (bh + ch + te) - sl;
-                        const ovp = (ov_mm / sl) * 100;
-                        const bhb = ((bh - (1.1 * tb)) / (sl - (1.1 * (2 * te + tb)))) * 100;
-                        
-                        updateField(`ov_mm_c${c}_p${p}`, ov_mm.toFixed(2), ov_mm >= 1.0);
-                        updateField(`ovp_c${c}_p${p}`, Math.round(ovp), ovp >= 45);
-                        const bhbPass = (stage === 'After production') ? bhb >= 70 : (bhb >= 70 && bhb <= 90);
-                        updateField(`bhb_c${c}_p${p}`, Math.round(bhb), bhbPass);
-                        if(st) updateField(`fs_c${c}_p${p}`, (st - (2 * tb + 3 * te)).toFixed(3), (st - (2 * tb + 3 * te)) >= 0.03);
-                        
-                        if (ov_mm < 1.0) issues.push(`Can ${c} Pt ${p}: Low Overlap.`); [3]
-                        if (vac < -5) issues.push(`Can ${c} Pt ${p}: Vacuum below -5 KPa.`); [2]
-                    }
-                }
+                for(let p=1; p<=3; p++) processPoint(`_c${c}_p${p}`, c, p);
             }
         }
+
+        const aiPanel = document.getElementById('aiDiagnosticPanel');
         document.getElementById('aiList').innerHTML = [...new Set(issues)].map(msg => `<li>${msg}</li>`).join('');
-        document.getElementById('aiDiagnosticPanel').style.display = issues.length > 0 ? 'block' : 'none';
+        aiPanel.style.display = issues.length > 0 ? 'block' : 'none';
     }
 
     function updateField(id, val, isPass) {
@@ -233,8 +241,8 @@
         el.classList.toggle('out-of-spec', !isPass);
     }
 
-    async function searchRecords() { alert("Searching records for existing AG Code and Job..."); }
-    async function submitRecords() { alert("Syncing matrix to cloud database..."); }
+    async function searchRecords() { alert("Searching production history..."); }
+    async function submitRecords() { alert("Syncing full matrix to database..."); }
 
     window.onload = () => renderView();
 </script>
