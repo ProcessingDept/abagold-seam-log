@@ -244,10 +244,78 @@
         el.classList.toggle('out-of-spec', !isPass);
     }
 
-    async function submitRecords() {
-        // Updated to include micrometer fields in sync [Source 179]
-        alert("Syncing matrix + Micrometer ID " + document.getElementById('micro_serial').value + " to cloud...");
+ async function submitRecords() {
+    // 1. Validation: Block sync if in Quick Test or missing critical metadata
+    if (currentMode === 'Quick') {
+        alert("Quick Test data is for diagnostics only and is not saved to the cloud.");
+        return;
     }
+
+    const inspector = document.getElementById('inspector').value;
+    const agCode = document.getElementById('ag_code').value;
+    const jobNo = document.getElementById('job_no').value;
+
+    if (!inspector || !agCode || !jobNo) {
+        alert("CRITICAL: AG Code, Job Number, and Signature are required for compliance.");
+        return;
+    }
+
+    try {
+        // 2. Insert the Header Record (Metadata + Micrometer ID)
+        const { data: header, error: headerError } = await sb
+            .from('inspections')
+            .insert([{
+                inspector_name: inspector,
+                report_date: document.getElementById('report_date').value,
+                ag_code: agCode,
+                job_number: jobNo,
+                pallet_code_cans: document.getElementById('pallet_cans').value,
+                can_size: document.getElementById('can_size').value,
+                inspection_stage: document.getElementById('stage').value,
+                micrometer_serial: document.getElementById('micro_serial').value, // SYNCING MIC ID
+                micro_check: parseFloat(document.getElementById('micro_check').value), // SYNCING VERIFICATION
+                plate_te: parseFloat(document.getElementById('te').value),
+                plate_tb: parseFloat(document.getElementById('tb').value)
+            }])
+            .select();
+
+        if (headerError) throw headerError;
+        const inspectionId = header.id;
+
+        // 3. Prepare the 6-Point Matrix for Insertion
+        const pointsToInsert = [];
+        for (let c = 1; c <= 2; c++) {
+            for (let p = 1; p <= 3; p++) {
+                pointsToInsert.push({
+                    inspection_id: inspectionId,
+                    can_number: c,
+                    point_position: p,
+                    vacuum_kpa: parseFloat(document.getElementById(`vac_c${c}_p${p}`).value) || 0,
+                    seam_length: parseFloat(document.getElementById(`sl_c${c}_p${p}`).value) || 0,
+                    seam_thickness: parseFloat(document.getElementById(`st_c${c}_p${p}`).value) || 0,
+                    body_hook: parseFloat(document.getElementById(`bh_c${c}_p${p}`).value) || 0,
+                    cover_hook: parseFloat(document.getElementById(`ch_c${c}_p${p}`).value) || 0,
+                    actual_overlap: parseFloat(document.getElementById(`ov_mm_c${c}_p${p}`).value) || 0,
+                    overlap_percent: parseFloat(document.getElementById(`ovp_c${c}_p${p}`).value) || 0,
+                    bhb_percent: parseFloat(document.getElementById(`bhb_c${c}_p${p}`).value) || 0,
+                    free_space: parseFloat(document.getElementById(`fs_c${c}_p${p}`).value) || 0,
+                    tightness_rating: parseFloat(document.getElementById(`tightness_c${c}_p${p}`).value) || 0
+                });
+            }
+        }
+
+        // 4. Batch Insert the Matrix Points
+        const { error: pointsError } = await sb.from('inspection_points').insert(pointsToInsert);
+        if (pointsError) throw pointsError;
+
+        alert("SUCCESS: REC 7.2.12 Matrix & Micrometer ID synced to Supabase Cloud.");
+        location.reload(); // Reset form for next test
+
+    } catch (err) {
+        console.error("Sync Error:", err);
+        alert("DATABASE ERROR: " + err.message);
+    }
+}
 
     window.onload = () => renderView();
 </script>
